@@ -17,15 +17,7 @@ package anidb
 import (
 	"encoding/xml"
 	"io"
-	"net/http"
-
-	"github.com/pkg/errors"
 )
-
-type Client struct {
-	Name    string
-	Version int
-}
 
 type Anime struct {
 	AID    int     `xml:"aid,attr"`
@@ -39,15 +31,12 @@ type Title struct {
 }
 
 func RequestTitles() ([]Anime, error) {
-	resp, err := http.Get("http://anidb.net/api/anime-titles.xml.gz")
+	r, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("Bad status %d", resp.StatusCode)
-	}
-	return decodeTitles(resp.Body)
+	defer r.Close()
+	return decodeTitles(r)
 }
 
 func decodeTitles(r io.Reader) ([]Anime, error) {
