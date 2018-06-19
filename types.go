@@ -16,7 +16,7 @@ package anidb
 
 // Anime holds information for an anime.
 type Anime struct {
-	AID          int       `xml:"aid,attr"`
+	AID          int       `xml:"id,attr"`
 	Titles       []Title   `xml:"titles>title"`
 	Type         string    `xml:"type"`
 	EpisodeCount int       `xml:"episodecount"`
@@ -31,8 +31,9 @@ type AnimeT struct {
 	Titles []Title `xml:"title"`
 }
 
+// Title holds information for a single anime title.
 type Title struct {
-	Name string `xml:",innerxml"`
+	Name string `xml:",chardata"`
 	Type string `xml:"type,attr"`
 	Lang string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
 }
@@ -42,14 +43,14 @@ type Episode struct {
 	// EpNo is a concatenation of a type string and episode number.  It
 	// should be unique among the episodes for an anime, so it can serve
 	// as a unique identifier.
-	EpNo string
-	// Type is the episode type code.
-	Type int
+	EpNo string `xml:"epno"`
 	// Length is the length of the episode in minutes.
-	Length int
-	Title  EpisodeTitle
+	Length int       `xml:"length"`
+	Titles []EpTitle `xml:"title"`
 }
 
-type EpisodeTitle struct {
-	Title, Lang string
+// EpTitle holds information for a single episode title.
+type EpTitle struct {
+	Title string `xml:",chardata"`
+	Lang  string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
 }
