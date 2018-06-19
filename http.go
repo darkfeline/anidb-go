@@ -42,14 +42,6 @@ func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	return httpGet(u.String())
 }
 
-type APIError struct {
-	text string
-}
-
-func (e APIError) Error() string {
-	return e.text
-}
-
 func httpGet(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -79,7 +71,5 @@ func checkAPIError(d []byte) error {
 		Text string `xml:",innerxml"`
 	}
 	_ = xml.Unmarshal(d, &a)
-	return APIError{
-		text: a.Text,
-	}
+	return errors.Errorf("API error: %s", a.Text)
 }
