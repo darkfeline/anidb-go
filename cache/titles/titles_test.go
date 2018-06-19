@@ -30,7 +30,7 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Error creating temporary dir: %s", err)
 	}
 	defer os.RemoveAll(d)
-	a := []anidb.Anime{{AID: 22, Titles: []anidb.Title{
+	a := []anidb.AnimeT{{AID: 22, Titles: []anidb.Title{
 		{
 			Name: "Neon Genesis Evangelion",
 			Type: "official",

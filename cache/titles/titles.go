@@ -27,13 +27,13 @@ import (
 	"go.felesatra.moe/xdg"
 )
 
-func Load(path string) ([]anidb.Anime, error) {
+func Load(path string) ([]anidb.AnimeT, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	d := gob.NewDecoder(f)
-	var a []anidb.Anime
+	var a []anidb.AnimeT
 	err = d.Decode(&a)
 	if err != nil {
 		return nil, err
@@ -44,11 +44,11 @@ func Load(path string) ([]anidb.Anime, error) {
 var cacheDir = filepath.Join(xdg.CacheHome(), "go.felesatra.moe_anidb")
 var titlesPath = filepath.Join(cacheDir, "titles.gob")
 
-func LoadDefault() ([]anidb.Anime, error) {
+func LoadDefault() ([]anidb.AnimeT, error) {
 	return Load(titlesPath)
 }
 
-func Save(path string, a []anidb.Anime) error {
+func Save(path string, a []anidb.AnimeT) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -57,6 +57,6 @@ func Save(path string, a []anidb.Anime) error {
 	return e.Encode(a)
 }
 
-func SaveDefault(a []anidb.Anime) error {
+func SaveDefault(a []anidb.AnimeT) error {
 	return Save(titlesPath, a)
 }

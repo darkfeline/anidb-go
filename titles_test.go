@@ -29,7 +29,7 @@ func TestDecodeTitles(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error decoding titles: %+v", err)
 	}
-	exp := []Anime{{AID: 22, Titles: []Title{
+	exp := []AnimeT{{AID: 22, Titles: []Title{
 		{
 			Name: "Neon Genesis Evangelion",
 			Type: "official",

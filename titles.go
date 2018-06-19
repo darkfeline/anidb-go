@@ -16,18 +16,7 @@ package anidb
 
 import "encoding/xml"
 
-type Anime struct {
-	AID    int     `xml:"aid,attr"`
-	Titles []Title `xml:"title"`
-}
-
-type Title struct {
-	Name string `xml:",innerxml"`
-	Type string `xml:"type,attr"`
-	Lang string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
-}
-
-func RequestTitles() ([]Anime, error) {
+func RequestTitles() ([]AnimeT, error) {
 	d, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
 	if err != nil {
 		return nil, err
@@ -35,12 +24,12 @@ func RequestTitles() ([]Anime, error) {
 	return decodeTitles(d)
 }
 
-func decodeTitles(d []byte) ([]Anime, error) {
-	var a struct {
-		Anime []Anime `xml:"anime"`
+func decodeTitles(d []byte) ([]AnimeT, error) {
+	var r struct {
+		Anime []AnimeT `xml:"anime"`
 	}
-	if err := xml.Unmarshal(d, &a); err != nil {
+	if err := xml.Unmarshal(d, &r); err != nil {
 		return nil, err
 	}
-	return a.Anime, nil
+	return r.Anime, nil
 }
