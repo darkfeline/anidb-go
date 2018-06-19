@@ -24,6 +24,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Client describe the AniDB API client in use.  Read the AniDB API
+// documentation about registering a client.
 type Client struct {
 	Name    string
 	Version int

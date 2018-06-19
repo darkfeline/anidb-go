@@ -19,6 +19,7 @@ import (
 	"strconv"
 )
 
+// RequestAnime requests anime information from AniDB.
 func RequestAnime(c Client, aid int) (*Anime, error) {
 	d, err := httpAPI(c, map[string]string{
 		"request": "anime",

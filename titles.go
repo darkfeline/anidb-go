@@ -16,6 +16,7 @@ package anidb
 
 import "encoding/xml"
 
+// RequestTitles requests title information from AniDB.
 func RequestTitles() ([]AnimeT, error) {
 	d, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
 	if err != nil {
