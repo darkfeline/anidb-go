@@ -14,10 +14,7 @@
 
 package anidb
 
-import (
-	"encoding/xml"
-	"io"
-)
+import "encoding/xml"
 
 type Anime struct {
 	AID    int     `xml:"aid,attr"`
@@ -31,21 +28,18 @@ type Title struct {
 }
 
 func RequestTitles() ([]Anime, error) {
-	r, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
+	d, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
-	return decodeTitles(r)
+	return decodeTitles(d)
 }
 
-func decodeTitles(r io.Reader) ([]Anime, error) {
-	d := xml.NewDecoder(r)
+func decodeTitles(d []byte) ([]Anime, error) {
 	var a struct {
 		Anime []Anime `xml:"anime"`
 	}
-	err := d.Decode(&a)
-	if err != nil {
+	if err := xml.Unmarshal(d, &a); err != nil {
 		return nil, err
 	}
 	return a.Anime, nil

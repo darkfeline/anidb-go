@@ -16,32 +16,28 @@ package anidb
 
 import (
 	"io/ioutil"
-	"reflect"
 	"testing"
 )
 
-func TestDecodeTitles(t *testing.T) {
-	d, err := ioutil.ReadFile("testdata/titles.xml")
+func TestCheckAPIError(t *testing.T) {
+	d, err := ioutil.ReadFile("testdata/error.xml")
 	if err != nil {
 		t.Fatalf("Error reading test data file: %+v", err)
 	}
-	a, err := decodeTitles(d)
-	if err != nil {
-		t.Errorf("Error decoding titles: %+v", err)
+	err = checkAPIError(d)
+	exp := APIError{"Banned"}
+	if err != exp {
+		t.Errorf("Expected %#v, got %#v", exp, err)
 	}
-	exp := []Anime{{AID: 22, Titles: []Title{
-		{
-			Name: "Neon Genesis Evangelion",
-			Type: "official",
-			Lang: "en",
-		},
-		{
-			Name: "Shinseiki Evangelion",
-			Type: "main",
-			Lang: "x-jat",
-		},
-	}}}
-	if !reflect.DeepEqual(a, exp) {
-		t.Errorf("Expected %#v, got %#v", exp, a)
+}
+
+func TestCheckAPIErrorGood(t *testing.T) {
+	d, err := ioutil.ReadFile("testdata/anime.xml")
+	if err != nil {
+		t.Fatalf("Error reading test data file: %+v", err)
+	}
+	err = checkAPIError(d)
+	if err != nil {
+		t.Errorf("Got unexpected error %+v", err)
 	}
 }

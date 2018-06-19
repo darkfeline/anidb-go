@@ -15,7 +15,8 @@
 package anidb
 
 import (
-	"io"
+	"encoding/xml"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -28,7 +29,7 @@ type Client struct {
 	Version int
 }
 
-func httpAPI(c Client, params map[string]string) (io.ReadCloser, error) {
+func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	v := url.Values{}
 	v.Set("client", c.Name)
 	v.Set("clientver", strconv.Itoa(c.Version))
@@ -38,20 +39,47 @@ func httpAPI(c Client, params map[string]string) (io.ReadCloser, error) {
 		panic(err)
 	}
 	u.RawQuery = v.Encode()
-	r, err := httpGet(u.String())
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
+	return httpGet(u.String())
 }
 
-func httpGet(url string) (io.ReadCloser, error) {
+type APIError struct {
+	text string
+}
+
+func (e APIError) Error() string {
+	return e.text
+}
+
+func httpGet(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("Bad status %d", resp.StatusCode)
 	}
-	return resp.Body, nil
+	d, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if err := checkAPIError(d); err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+func checkAPIError(d []byte) error {
+	var n xml.Name
+	_ = xml.Unmarshal(d, &n)
+	if n.Local != "error" {
+		return nil
+	}
+	var a struct {
+		Text string `xml:",innerxml"`
+	}
+	_ = xml.Unmarshal(d, &a)
+	return APIError{
+		text: a.Text,
+	}
 }
