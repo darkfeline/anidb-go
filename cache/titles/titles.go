@@ -62,5 +62,9 @@ func Save(path string, a []anidb.AnimeT) error {
 
 // SaveDefault saves anime title data to a default cache path.
 func SaveDefault(a []anidb.AnimeT) error {
+	err := os.MkdirAll(filepath.Dir(titlesPath), 0777)
+	if err != nil {
+		return err
+	}
 	return Save(titlesPath, a)
 }
