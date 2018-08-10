@@ -50,7 +50,7 @@ func LoadDefault() ([]anidb.AnimeT, error) {
 	return Load(titlesPath)
 }
 
-// SaveDefault saves anime title data.
+// Save saves anime title data to a cache.
 func Save(path string, a []anidb.AnimeT) error {
 	f, err := os.Create(path)
 	if err != nil {
