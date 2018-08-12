@@ -25,9 +25,12 @@ func TestCheckAPIError(t *testing.T) {
 		t.Fatalf("Error reading test data file: %+v", err)
 	}
 	err = checkAPIError(d)
-	exp := "API error: Banned"
+	if err == nil {
+		t.Fatalf("Did not get error")
+	}
+	exp := "Banned"
 	if err.Error() != exp {
-		t.Errorf("Expected %#v, got %#v", exp, err.Error())
+		t.Errorf("err.Error() = %#v, expected %#v", err.Error(), exp)
 	}
 }
 

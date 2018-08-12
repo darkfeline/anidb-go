@@ -42,6 +42,6 @@ func TestDecodeTitles(t *testing.T) {
 		},
 	}}}
 	if !reflect.DeepEqual(a, exp) {
-		t.Errorf("Expected %#v, got %#v", exp, a)
+		t.Errorf("decodeTitles(%#v) = %#v, expected %#v", d, a, exp)
 	}
 }
