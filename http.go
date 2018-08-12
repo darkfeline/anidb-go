@@ -69,6 +69,10 @@ func checkAPIError(d []byte) error {
 	var a struct {
 		Text string `xml:",innerxml"`
 	}
-	_ = xml.Unmarshal(d, &a)
-	return fmt.Errorf("API error: %s", a.Text)
+	err := xml.Unmarshal(d, &a)
+	if err != nil {
+		// Unmarshaling should never fail.
+		panic(err)
+	}
+	return errors.New(a.Text)
 }
