@@ -16,6 +16,7 @@ package anidb
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -73,5 +74,5 @@ func checkAPIError(d []byte) error {
 		Text string `xml:",innerxml"`
 	}
 	_ = xml.Unmarshal(d, &a)
-	return errors.Errorf("API error: %s", a.Text)
+	return fmt.Errorf("API error: %s", a.Text)
 }

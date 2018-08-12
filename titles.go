@@ -14,15 +14,22 @@
 
 package anidb
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 // RequestTitles requests title information from AniDB.
 func RequestTitles() ([]AnimeT, error) {
 	d, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("anidb: titles request error: %s", err)
 	}
-	return decodeTitles(d)
+	ts, err := decodeTitles(d)
+	if err != nil {
+		return nil, fmt.Errorf("anidb: decode titles error: %s", err)
+	}
+	return ts, nil
 }
 
 func decodeTitles(d []byte) ([]AnimeT, error) {

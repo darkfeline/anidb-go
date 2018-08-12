@@ -16,6 +16,7 @@ package anidb
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strconv"
 )
 
@@ -26,9 +27,13 @@ func RequestAnime(c Client, aid int) (*Anime, error) {
 		"aid":     strconv.Itoa(aid),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("anidb: request error for anime %d: %s", aid, err)
 	}
-	return decodeAnime(d)
+	a, err := decodeAnime(d)
+	if err != nil {
+		return nil, fmt.Errorf("anidb: decode error for anime %d: %s", aid, err)
+	}
+	return a, nil
 }
 
 func decodeAnime(d []byte) (*Anime, error) {
