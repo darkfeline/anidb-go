@@ -34,28 +34,16 @@ func TestDecodeAnime(t *testing.T) {
 			EpNo:   "1",
 			Length: 25,
 			Titles: []EpTitle{
-				{
-					Title: "使徒, 襲来",
-					Lang:  "ja",
-				},
-				{
-					Title: "Angel Attack!",
-					Lang:  "en",
-				},
-				{
-					Title: "Shito, Shuurai",
-					Lang:  "x-jat",
-				},
+				{Title: "使徒, 襲来", Lang: "ja"},
+				{Title: "Angel Attack!", Lang: "en"},
+				{Title: "Shito, Shuurai", Lang: "x-jat"},
 			},
 		},
 		{
 			EpNo:   "S1",
 			Length: 75,
 			Titles: []EpTitle{
-				{
-					Title: "Revival of Evangelion Extras Disc",
-					Lang:  "en",
-				},
+				{Title: "Revival of Evangelion Extras Disc", Lang: "en"},
 			},
 		},
 	}
@@ -66,16 +54,8 @@ func TestDecodeAnime(t *testing.T) {
 		StartDate:    "1995-10-04",
 		EndDate:      "1996-03-27",
 		Titles: []Title{
-			{
-				Name: "Shinseiki Evangelion",
-				Type: "main",
-				Lang: "x-jat",
-			},
-			{
-				Name: "Neon Genesis Evangelion",
-				Type: "official",
-				Lang: "en",
-			},
+			{Name: "Shinseiki Evangelion", Type: "main", Lang: "x-jat"},
+			{Name: "Neon Genesis Evangelion", Type: "official", Lang: "en"},
 		},
 		Episodes: e,
 	}
