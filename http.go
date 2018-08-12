@@ -37,12 +37,8 @@ func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	v.Set("client", c.Name)
 	v.Set("clientver", strconv.Itoa(c.Version))
 	v.Set("protover", "1")
-	u, err := url.Parse("http://api.anidb.net:9001/httpapi")
-	if err != nil {
-		panic(err)
-	}
-	u.RawQuery = v.Encode()
-	return httpGet(u.String())
+	u := "http://api.anidb.net:9001/httpapi?" + v.Encode()
+	return httpGet(u)
 }
 
 func httpGet(url string) ([]byte, error) {
