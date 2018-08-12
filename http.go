@@ -48,14 +48,14 @@ func httpGet(url string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("Bad status %d", resp.StatusCode)
+		return nil, fmt.Errorf("anidb: GET %s %s", url, resp.Status)
 	}
 	d, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("anidb: read body for GET %s: %s", url, err)
 	}
 	if err := checkAPIError(d); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("anidb: GET %s API error %s", url, err)
 	}
 	return d, nil
 }
