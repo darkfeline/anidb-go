@@ -33,14 +33,14 @@ type Client struct {
 }
 
 func httpAPI(c Client, params map[string]string) ([]byte, error) {
-	v := url.Values{}
-	v.Set("client", c.Name)
-	v.Set("clientver", strconv.Itoa(c.Version))
-	v.Set("protover", "1")
+	vals := url.Values{}
+	vals.Set("client", c.Name)
+	vals.Set("clientver", strconv.Itoa(c.Version))
+	vals.Set("protover", "1")
 	for k, v := range params {
-		v.Set(k, v)
+		vals.Set(k, v)
 	}
-	u := "http://api.anidb.net:9001/httpapi?" + v.Encode()
+	u := "http://api.anidb.net:9001/httpapi?" + vals.Encode()
 	return httpGet(u)
 }
 
