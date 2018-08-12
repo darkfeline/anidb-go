@@ -37,6 +37,9 @@ func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	v.Set("client", c.Name)
 	v.Set("clientver", strconv.Itoa(c.Version))
 	v.Set("protover", "1")
+	for k, v := range params {
+		v.Set(k, v)
+	}
 	u := "http://api.anidb.net:9001/httpapi?" + v.Encode()
 	return httpGet(u)
 }
