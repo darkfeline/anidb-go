@@ -25,7 +25,7 @@ func TestDecodeTitles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error reading test data file: %+v", err)
 	}
-	a, err := decodeTitles(d)
+	a, err := DecodeTitles(d)
 	if err != nil {
 		t.Errorf("Error decoding titles: %+v", err)
 	}
@@ -42,6 +42,6 @@ func TestDecodeTitles(t *testing.T) {
 		},
 	}}}
 	if !reflect.DeepEqual(a, exp) {
-		t.Errorf("decodeTitles(%#v) = %#v, expected %#v", d, a, exp)
+		t.Errorf("DecodeTitles(%#v) = %#v, expected %#v", d, a, exp)
 	}
 }

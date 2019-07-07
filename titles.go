@@ -25,14 +25,15 @@ func RequestTitles() ([]AnimeT, error) {
 	if err != nil {
 		return nil, fmt.Errorf("anidb: titles request error: %s", err)
 	}
-	ts, err := decodeTitles(d)
+	ts, err := DecodeTitles(d)
 	if err != nil {
 		return nil, fmt.Errorf("anidb: decode titles error: %s", err)
 	}
 	return ts, nil
 }
 
-func decodeTitles(d []byte) ([]AnimeT, error) {
+// DecodeTitles decodes XML title information from an AniDB title dump.
+func DecodeTitles(d []byte) ([]AnimeT, error) {
 	var r struct {
 		Anime []AnimeT `xml:"anime"`
 	}
