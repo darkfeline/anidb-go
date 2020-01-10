@@ -31,7 +31,7 @@ type Client struct {
 }
 
 var httpClient = http.Client{}
-var packageVersion = "1.0.1"
+var packageVersion = "1.0.2"
 var userAgent = "go.felesatra.moe/anidb " + packageVersion
 
 func httpAPI(c Client, params map[string]string) ([]byte, error) {

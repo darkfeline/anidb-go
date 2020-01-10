@@ -15,6 +15,7 @@
 package anidb
 
 import (
+	"compress/gzip"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -50,7 +51,12 @@ func downloadTitles() ([]byte, error) {
 	if resp.StatusCode != 200 {
 		return nil, err
 	}
-	d, err := ioutil.ReadAll(resp.Body)
+	r, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	d, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
