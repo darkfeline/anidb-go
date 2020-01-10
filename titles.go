@@ -17,11 +17,13 @@ package anidb
 import (
 	"encoding/xml"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
 // RequestTitles requests title information from AniDB.
 func RequestTitles() ([]AnimeT, error) {
-	d, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
+	d, err := downloadTitles()
 	if err != nil {
 		return nil, fmt.Errorf("anidb: request titles: %s", err)
 	}
@@ -30,6 +32,29 @@ func RequestTitles() ([]AnimeT, error) {
 		return nil, fmt.Errorf("anidb: request titles: %s", err)
 	}
 	return ts, nil
+}
+
+const titlesURL = "http://anidb.net/api/anime-titles.xml.gz"
+
+func downloadTitles() ([]byte, error) {
+	req, err := http.NewRequest("GET", titlesURL, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Add("User-Agent", userAgent)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, err
+	}
+	d, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
 }
 
 // DecodeTitles decodes XML title information from an AniDB title dump.

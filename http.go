@@ -30,11 +30,13 @@ type Client struct {
 	Version int
 }
 
-var apiClient = http.Client{}
+var httpClient = http.Client{}
+var packageVersion = "1.0.1"
+var userAgent = "go.felesatra.moe/anidb " + packageVersion
 
 func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	u := apiRequestURL(c, params)
-	resp, err := apiClient.Get(u)
+	resp, err := httpClient.Get(u)
 	if err != nil {
 		return nil, err
 	}
@@ -61,25 +63,6 @@ func apiRequestURL(c Client, params map[string]string) string {
 		vals.Set(k, v)
 	}
 	return "http://api.anidb.net:9001/httpapi?" + vals.Encode()
-}
-
-func httpGet(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("anidb: GET %s %s", url, resp.Status)
-	}
-	d, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("anidb: read body for GET %s: %s", url, err)
-	}
-	if err := checkAPIError(d); err != nil {
-		return nil, fmt.Errorf("anidb: GET %s API error %s", url, err)
-	}
-	return d, nil
 }
 
 func checkAPIError(d []byte) error {
