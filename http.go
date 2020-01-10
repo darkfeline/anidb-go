@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-
-	"github.com/pkg/errors"
 )
 
 // Client describe the AniDB API client in use.  Read the AniDB API
@@ -32,9 +30,26 @@ type Client struct {
 	Version int
 }
 
+var apiClient = http.Client{}
+
 func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	u := apiRequestURL(c, params)
-	return httpGet(u)
+	resp, err := apiClient.Get(u)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, err
+	}
+	d, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if err := checkAPIError(d); err != nil {
+		return nil, err
+	}
+	return d, nil
 }
 
 func apiRequestURL(c Client, params map[string]string) string {
@@ -76,10 +91,9 @@ func checkAPIError(d []byte) error {
 	var a struct {
 		Text string `xml:",innerxml"`
 	}
-	err := xml.Unmarshal(d, &a)
-	if err != nil {
+	if err := xml.Unmarshal(d, &a); err != nil {
 		// Unmarshaling should never fail.
 		panic(err)
 	}
-	return errors.New(a.Text)
+	return fmt.Errorf("API error: %s", a.Text)
 }

@@ -23,11 +23,11 @@ import (
 func RequestTitles() ([]AnimeT, error) {
 	d, err := httpGet("http://anidb.net/api/anime-titles.xml.gz")
 	if err != nil {
-		return nil, fmt.Errorf("anidb: titles request error: %s", err)
+		return nil, fmt.Errorf("anidb: request titles: %s", err)
 	}
 	ts, err := DecodeTitles(d)
 	if err != nil {
-		return nil, fmt.Errorf("anidb: decode titles error: %s", err)
+		return nil, fmt.Errorf("anidb: request titles: %s", err)
 	}
 	return ts, nil
 }
@@ -38,7 +38,7 @@ func DecodeTitles(d []byte) ([]AnimeT, error) {
 		Anime []AnimeT `xml:"anime"`
 	}
 	if err := xml.Unmarshal(d, &r); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("anidb: decode titles: %s", err)
 	}
 	return r.Anime, nil
 }
