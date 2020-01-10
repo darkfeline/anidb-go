@@ -33,6 +33,11 @@ type Client struct {
 }
 
 func httpAPI(c Client, params map[string]string) ([]byte, error) {
+	u := apiRequestURL(c, params)
+	return httpGet(u)
+}
+
+func apiRequestURL(c Client, params map[string]string) string {
 	vals := url.Values{}
 	vals.Set("client", c.Name)
 	vals.Set("clientver", strconv.Itoa(c.Version))
@@ -40,8 +45,7 @@ func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	for k, v := range params {
 		vals.Set(k, v)
 	}
-	u := "http://api.anidb.net:9001/httpapi?" + vals.Encode()
-	return httpGet(u)
+	return "http://api.anidb.net:9001/httpapi?" + vals.Encode()
 }
 
 func httpGet(url string) ([]byte, error) {
