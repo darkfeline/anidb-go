@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 
 	"go.felesatra.moe/anidb"
-	"go.felesatra.moe/xdg"
 )
 
 // Load loads cached anime title data.
@@ -42,8 +41,15 @@ func Load(path string) ([]anidb.AnimeT, error) {
 	return a, nil
 }
 
-var cacheDir = filepath.Join(xdg.CacheHome(), "go.felesatra.moe_anidb")
+var cacheDir string
 var titlesPath = filepath.Join(cacheDir, "titles.gob")
+
+func init() {
+	cacheDir = os.Getenv("XDG_CACHE_HOME")
+	if cacheDir == "" {
+		cacheDir = filepath.Join(os.Getenv("HOME"), ".cache")
+	}
+}
 
 // LoadDefault loads cached anime title data from a default cache path.
 func LoadDefault() ([]anidb.AnimeT, error) {
