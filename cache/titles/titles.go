@@ -41,14 +41,14 @@ func Load(path string) ([]anidb.AnimeT, error) {
 	return a, nil
 }
 
-var cacheDir string
-var titlesPath = filepath.Join(cacheDir, "titles.gob")
+var titlesPath string
 
 func init() {
-	cacheDir = os.Getenv("XDG_CACHE_HOME")
+	cacheDir := os.Getenv("XDG_CACHE_HOME")
 	if cacheDir == "" {
 		cacheDir = filepath.Join(os.Getenv("HOME"), ".cache")
 	}
+	titlesPath = filepath.Join(cacheDir, "go.felesatra.moe_anidb", "titles.gob")
 }
 
 // LoadDefault loads cached anime title data from a default cache path.
