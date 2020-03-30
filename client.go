@@ -15,6 +15,7 @@
 package anidb
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -28,6 +29,15 @@ import (
 type Client struct {
 	Name    string
 	Version int
+	// Limiter specifies a rate limiter to use.
+	// If unset, no rate limiting is done.
+	Limiter Limiter
+}
+
+// A Limiter implements rate limiting.
+// The golang.org/x/time/rate package provides an implementation.
+type Limiter interface {
+	Wait(context.Context) error
 }
 
 var httpClient = http.Client{}
@@ -37,8 +47,8 @@ const (
 	userAgent      = "go.felesatra.moe/anidb " + packageVersion
 )
 
-func httpAPI(c Client, params map[string]string) ([]byte, error) {
-	u := apiRequestURL(c, params)
+func (c *Client) httpAPI(params map[string]string) ([]byte, error) {
+	u := c.apiRequestURL(params)
 	resp, err := httpClient.Get(u)
 	if err != nil {
 		return nil, err
@@ -57,7 +67,7 @@ func httpAPI(c Client, params map[string]string) ([]byte, error) {
 	return d, nil
 }
 
-func apiRequestURL(c Client, params map[string]string) string {
+func (c *Client) apiRequestURL(params map[string]string) string {
 	vals := url.Values{}
 	vals.Set("client", c.Name)
 	vals.Set("clientver", strconv.Itoa(c.Version))

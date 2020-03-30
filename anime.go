@@ -22,7 +22,7 @@ import (
 
 // RequestAnime requests anime information from AniDB.
 func (c *Client) RequestAnime(aid int) (*Anime, error) {
-	d, err := httpAPI(*c, map[string]string{
+	d, err := c.httpAPI(map[string]string{
 		"request": "anime",
 		"aid":     strconv.Itoa(aid),
 	})
