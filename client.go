@@ -48,6 +48,11 @@ const (
 )
 
 func (c *Client) httpAPI(params map[string]string) ([]byte, error) {
+	if c.Limiter != nil {
+		if err := c.Limiter.Wait(context.Background()); err != nil {
+			return nil, err
+		}
+	}
 	u := c.apiRequestURL(params)
 	resp, err := httpClient.Get(u)
 	if err != nil {
