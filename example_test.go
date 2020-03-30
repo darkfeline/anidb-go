@@ -16,6 +16,7 @@ package anidb_test
 
 import (
 	"fmt"
+	"strings"
 
 	"go.felesatra.moe/anidb"
 )
@@ -38,12 +39,18 @@ func ExampleTitlesCache() {
 		panic(err)
 	}
 	defer c.Save()
-	t, err := c.GetTitles()
+	titles, err := c.GetTitles()
 	if err != nil {
 		panic(err)
 	}
-	// XXXXXXXXXXXXXX TODO add searching
-	_ = t
+	var matched []anidb.AnimeT
+	for _, anime := range titles {
+		for _, t := range anime.Titles {
+			if strings.Index(t.Name, "bofuri") >= 0 {
+				matched = append(matched)
+			}
+		}
+	}
 }
 
 func ExampleTitlesCache_new() {
