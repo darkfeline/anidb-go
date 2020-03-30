@@ -27,11 +27,11 @@ func (c *Client) RequestAnime(aid int) (*Anime, error) {
 		"aid":     strconv.Itoa(aid),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("anidb: request anime %d: %s", aid, err)
+		return nil, fmt.Errorf("anidb request anime %d: %s", aid, err)
 	}
 	a, err := decodeAnime(d)
 	if err != nil {
-		return nil, fmt.Errorf("anidb: request anime %d: %s", aid, err)
+		return nil, fmt.Errorf("anidb request anime %d: %s", aid, err)
 	}
 	return a, nil
 }

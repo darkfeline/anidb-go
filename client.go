@@ -92,5 +92,5 @@ func checkAPIError(d []byte) error {
 		// Unmarshaling should never fail.
 		panic(err)
 	}
-	return fmt.Errorf("API error: %s", a.Text)
+	return fmt.Errorf("API error %s", a.Text)
 }
