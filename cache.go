@@ -21,15 +21,21 @@ import (
 	"path/filepath"
 )
 
+// A TitlesCache represents a cache for AniDB titles data.
 type TitlesCache struct {
-	Path   string
+	// Path is the path to the cache file.
+	Path string
+	// Titles is the titles loaded from the cache.
 	Titles []AnimeT
 }
 
+// DefaultTitlesCache opens a TitlesCache at a default location,
+// using XDG_CACHE_DIR.
 func DefaultTitlesCache() (*TitlesCache, error) {
 	return OpenTitlesCache(defaultTitlesCacheFile())
 }
 
+// OpenTitlesCache opens a TitlesCache.
 func OpenTitlesCache(path string) (*TitlesCache, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -45,6 +51,8 @@ func OpenTitlesCache(path string) (*TitlesCache, error) {
 	return c, nil
 }
 
+// GetTitles gets titles from the cache.
+// If the cache has not been populated yet, downloads titles from AniDB.
 func (c *TitlesCache) GetTitles() ([]AnimeT, error) {
 	if len(c.Titles) > 0 {
 		return c.Titles, nil
@@ -52,6 +60,8 @@ func (c *TitlesCache) GetTitles() ([]AnimeT, error) {
 	return c.GetFreshTitles()
 }
 
+// GetFreshTitles downloads titles from AniDB and stores it in the cache.
+// See AniDB API documentation about rate limits.
 func (c *TitlesCache) GetFreshTitles() ([]AnimeT, error) {
 	t, err := RequestTitles()
 	if err != nil {
@@ -61,6 +71,7 @@ func (c *TitlesCache) GetFreshTitles() ([]AnimeT, error) {
 	return t, nil
 }
 
+// Save saves the cached titles to the cache file.
 func (c *TitlesCache) Save() error {
 	f, err := os.Create(c.Path)
 	if err != nil {

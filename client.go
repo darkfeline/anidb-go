@@ -23,8 +23,8 @@ import (
 	"strconv"
 )
 
-// Client describe the AniDB API client in use.  Read the AniDB API
-// documentation about registering a client.
+// A Client describe the AniDB API client in use.
+// Read the AniDB API documentation about registering a client.
 type Client struct {
 	Name    string
 	Version int
@@ -68,6 +68,7 @@ func apiRequestURL(c Client, params map[string]string) string {
 	return "http://api.anidb.net:9001/httpapi?" + vals.Encode()
 }
 
+// checkAPIError checks for in-band AniDB API errors.
 func checkAPIError(d []byte) error {
 	var n xml.Name
 	_ = xml.Unmarshal(d, &n)

@@ -14,6 +14,10 @@
 
 // Package anidb provides Go bindings for AniDB APIs.
 //
+// Read the AniDB API documentation for up to date information,
+// especially about request limits.
+// You are responsible for configuring rate limiting correctly.
+//
 // Documentation for the AniDB APIs can be found at
 // https://wiki.anidb.net/w/API.
 package anidb

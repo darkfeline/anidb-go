@@ -49,3 +49,38 @@ func decodeAnime(d []byte) (*Anime, error) {
 	}
 	return &r, nil
 }
+
+// An Anime holds information for an anime.
+type Anime struct {
+	AID          int       `xml:"id,attr"`
+	Titles       []Title   `xml:"titles>title"`
+	Type         string    `xml:"type"`
+	EpisodeCount int       `xml:"episodecount"`
+	StartDate    string    `xml:"startdate"`
+	EndDate      string    `xml:"enddate"`
+	Episodes     []Episode `xml:"episodes>episode"`
+}
+
+// A Title holds information for a single anime title.
+type Title struct {
+	Name string `xml:",chardata"`
+	Type string `xml:"type,attr"`
+	Lang string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
+}
+
+// An Episode holds information for an episode.
+type Episode struct {
+	// EpNo is a concatenation of a type string and episode number.  It
+	// should be unique among the episodes for an anime, so it can serve
+	// as a unique identifier.
+	EpNo string `xml:"epno"`
+	// Length is the length of the episode in minutes.
+	Length int       `xml:"length"`
+	Titles []EpTitle `xml:"title"`
+}
+
+// An EpTitle holds information for a single episode title.
+type EpTitle struct {
+	Title string `xml:",chardata"`
+	Lang  string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
+}

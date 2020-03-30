@@ -23,6 +23,9 @@ import (
 )
 
 // RequestTitles requests title information from AniDB.
+//
+// TitlesCache is more convenient to use, as AniDB has severe rate
+// limits on this.
 func RequestTitles() ([]AnimeT, error) {
 	d, err := downloadTitles()
 	if err != nil {
@@ -64,6 +67,7 @@ func downloadTitles() ([]byte, error) {
 }
 
 // DecodeTitles decodes XML title information from an AniDB title dump.
+// The input should be uncompressed XML.
 func DecodeTitles(d []byte) ([]AnimeT, error) {
 	var r struct {
 		Anime []AnimeT `xml:"anime"`
@@ -72,4 +76,10 @@ func DecodeTitles(d []byte) ([]AnimeT, error) {
 		return nil, fmt.Errorf("anidb: decode titles: %s", err)
 	}
 	return r.Anime, nil
+}
+
+// An AnimeT is like Anime but holds title information only.
+type AnimeT struct {
+	AID    int     `xml:"aid,attr"`
+	Titles []Title `xml:"title"`
 }
