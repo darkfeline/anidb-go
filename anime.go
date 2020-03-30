@@ -21,8 +21,8 @@ import (
 )
 
 // RequestAnime requests anime information from AniDB.
-func RequestAnime(c Client, aid int) (*Anime, error) {
-	d, err := httpAPI(c, map[string]string{
+func (c *Client) RequestAnime(aid int) (*Anime, error) {
+	d, err := httpAPI(*c, map[string]string{
 		"request": "anime",
 		"aid":     strconv.Itoa(aid),
 	})
@@ -34,6 +34,12 @@ func RequestAnime(c Client, aid int) (*Anime, error) {
 		return nil, fmt.Errorf("anidb: request anime %d: %s", aid, err)
 	}
 	return a, nil
+}
+
+// RequestAnime requests anime information from AniDB.
+// This is deprecated; use the Client.RequestAnime method instead.
+func RequestAnime(c Client, aid int) (*Anime, error) {
+	return c.RequestAnime(aid)
 }
 
 func decodeAnime(d []byte) (*Anime, error) {
