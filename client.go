@@ -43,7 +43,7 @@ type Limiter interface {
 var httpClient = http.Client{}
 
 const (
-	packageVersion = "1.0.2"
+	packageVersion = "1.1.0"
 	userAgent      = "go.felesatra.moe/anidb " + packageVersion
 )
 
