@@ -39,6 +39,9 @@ func DefaultTitlesCache() (*TitlesCache, error) {
 func OpenTitlesCache(path string) (*TitlesCache, error) {
 	f, err := os.Open(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return &TitlesCache{Path: path}, nil
+		}
 		return nil, fmt.Errorf("open titles cache: %s", err)
 	}
 	defer f.Close()
@@ -73,6 +76,9 @@ func (c *TitlesCache) GetFreshTitles() ([]AnimeT, error) {
 
 // Save saves the cached titles to the cache file.
 func (c *TitlesCache) Save() error {
+	if err := os.MkdirAll(filepath.Dir(c.Path), 0777); err != nil {
+		return fmt.Errorf("save titles cache: %s", err)
+	}
 	f, err := os.Create(c.Path)
 	if err != nil {
 		return fmt.Errorf("save titles cache: %s", err)
