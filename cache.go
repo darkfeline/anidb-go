@@ -27,6 +27,8 @@ type TitlesCache struct {
 	Path string
 	// Titles is the titles loaded from the cache.
 	Titles []AnimeT
+	// Updated indicates if the cached titles were updated.
+	Updated bool
 }
 
 // DefaultTitlesCache opens a TitlesCache at a default location,
@@ -71,10 +73,12 @@ func (c *TitlesCache) GetFreshTitles() ([]AnimeT, error) {
 		return nil, err
 	}
 	c.Titles = t
+	c.Updated = true
 	return t, nil
 }
 
 // Save saves the cached titles to the cache file.
+// This method sets Updated to false if successful.
 func (c *TitlesCache) Save() error {
 	if err := os.MkdirAll(filepath.Dir(c.Path), 0777); err != nil {
 		return fmt.Errorf("save titles cache: %s", err)
@@ -90,7 +94,18 @@ func (c *TitlesCache) Save() error {
 	if err := f.Close(); err != nil {
 		return fmt.Errorf("save titles cache: %s", err)
 	}
+	c.Updated = false
 	return nil
+}
+
+// SaveIfUpdated saves the cached titles to the cache file if they
+// have been updated.
+// This method sets Updated to false if successful.
+func (c *TitlesCache) SaveIfUpdated() error {
+	if !c.Updated {
+		return nil
+	}
+	return c.Save()
 }
 
 func defaultTitlesCacheFile() string {
