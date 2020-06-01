@@ -38,7 +38,7 @@ func ExampleTitlesCache() {
 	if err != nil {
 		panic(err)
 	}
-	defer c.Save()
+	defer c.SaveIfUpdated()
 	titles, err := c.GetTitles()
 	if err != nil {
 		panic(err)
@@ -50,17 +50,5 @@ func ExampleTitlesCache() {
 				matched = append(matched)
 			}
 		}
-	}
-}
-
-func ExampleTitlesCache_new() {
-	c := &anidb.TitlesCache{
-		Path: "some/path",
-	}
-	if _, err := c.GetFreshTitles(); err != nil {
-		panic(err)
-	}
-	if err := c.Save(); err != nil {
-		panic(err)
 	}
 }
