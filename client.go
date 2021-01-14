@@ -42,11 +42,6 @@ type Limiter interface {
 
 var httpClient = http.Client{}
 
-const (
-	packageVersion = "1.1.0"
-	userAgent      = "go.felesatra.moe/anidb " + packageVersion
-)
-
 func (c *Client) httpAPI(params map[string]string) ([]byte, error) {
 	if c.Limiter != nil {
 		if err := c.Limiter.Wait(context.Background()); err != nil {
