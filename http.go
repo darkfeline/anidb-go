@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-// A Client describe the AniDB API client in use.
+// A Client describes the AniDB HTTP API client in use.
 // Read the AniDB API documentation about registering a client.
 type Client struct {
 	Name    string
