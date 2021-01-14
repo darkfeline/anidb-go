@@ -28,6 +28,7 @@ type TitlesCache struct {
 	// Titles is the titles loaded from the cache.
 	Titles []AnimeT
 	// Updated indicates if the cached titles were updated.
+	// This is set to true when any method updates the cache.
 	Updated bool
 }
 
