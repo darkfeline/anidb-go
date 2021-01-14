@@ -16,8 +16,53 @@ package anidb
 
 import (
 	"io/ioutil"
+	"reflect"
 	"testing"
 )
+
+func TestDecodeAnime(t *testing.T) {
+	d, err := ioutil.ReadFile("testdata/anime.xml")
+	if err != nil {
+		t.Fatalf("Error reading test data file: %+v", err)
+	}
+	a, err := decodeAnime(d)
+	if err != nil {
+		t.Errorf("Error decoding titles: %+v", err)
+	}
+	e := []Episode{
+		{
+			EpNo:   "1",
+			Length: 25,
+			Titles: []EpTitle{
+				{Title: "使徒, 襲来", Lang: "ja"},
+				{Title: "Angel Attack!", Lang: "en"},
+				{Title: "Shito, Shuurai", Lang: "x-jat"},
+			},
+		},
+		{
+			EpNo:   "S1",
+			Length: 75,
+			Titles: []EpTitle{
+				{Title: "Revival of Evangelion Extras Disc", Lang: "en"},
+			},
+		},
+	}
+	exp := &Anime{
+		AID:          22,
+		Type:         "TV Series",
+		EpisodeCount: 26,
+		StartDate:    "1995-10-04",
+		EndDate:      "1996-03-27",
+		Titles: []Title{
+			{Name: "Shinseiki Evangelion", Type: "main", Lang: "x-jat"},
+			{Name: "Neon Genesis Evangelion", Type: "official", Lang: "en"},
+		},
+		Episodes: e,
+	}
+	if !reflect.DeepEqual(a, exp) {
+		t.Errorf("Expected %#v, got %#v", exp, a)
+	}
+}
 
 func TestCheckAPIError(t *testing.T) {
 	d, err := ioutil.ReadFile("testdata/error.xml")
