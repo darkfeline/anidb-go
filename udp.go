@@ -116,10 +116,13 @@ type Session struct {
 	limiter Limiter
 	logger  Logger
 
+	// Mutex protected
+	muSessionKey sync.Mutex
+	sessionKey   string
+
 	// Unsafe concurrent set
-	block      cipher.Block
-	sessionKey string
-	isNAT      bool
+	block cipher.Block
+	isNAT bool
 }
 
 // Close immediately closes the session.
@@ -182,7 +185,9 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 		if len(parts) < 3 {
 			return fmt.Errorf("auth request: invalid response header %q", resp.header)
 		}
+		s.muSessionKey.Lock()
 		s.sessionKey = parts[0]
+		s.muSessionKey.Unlock()
 		// TODO Make address comparison reliable
 		if s.conn.LocalAddr().String() != parts[1] {
 			s.isNAT = true
