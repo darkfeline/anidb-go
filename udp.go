@@ -384,7 +384,7 @@ const (
 //go:generate stringer -type=returnCode
 
 func (c returnCode) Error() string {
-	return fmt.Sprintf("return code %d %s", c, c)
+	return fmt.Sprintf("return code %d %s", c, c.String())
 }
 
 // A udpLimiter complies with AniDB UDP API recommendations.
