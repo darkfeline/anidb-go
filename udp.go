@@ -85,8 +85,11 @@ func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
 	if err := s.auth(ctx, c); err != nil {
 		return nil, fmt.Errorf("start anidb UDP: %s", err)
 	}
+	if s.isNAT {
+		// XXXXXXXXXXXX
+		// ping
+	}
 	// XXXXXXXXXXXX
-	// ping
 	// keepalive
 	// logout
 
