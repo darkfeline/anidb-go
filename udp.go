@@ -119,10 +119,11 @@ type Session struct {
 	// Mutex protected
 	muSessionKey sync.Mutex
 	sessionKey   string
+	muIsNAT      sync.Mutex
+	isNAT        bool
 
 	// Unsafe concurrent set
 	block cipher.Block
-	isNAT bool
 }
 
 // Close immediately closes the session.
@@ -161,7 +162,7 @@ func (s *Session) encrypt(ctx context.Context, user string, key string) error {
 }
 
 // auth RPC call
-// Not concurrent safe.
+// Concurrent safe.
 func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 	v := url.Values{}
 	v.Set("user", cfg.UserName)
@@ -190,7 +191,9 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 		s.muSessionKey.Unlock()
 		// TODO Make address comparison reliable
 		if s.conn.LocalAddr().String() != parts[1] {
+			s.muIsNAT.Lock()
 			s.isNAT = true
+			s.muIsNAT.Unlock()
 		}
 		return nil
 	default:
