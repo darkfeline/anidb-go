@@ -243,6 +243,14 @@ func (s *Session) log(format string, v ...interface{}) {
 	s.logger.Printf(format, v...)
 }
 
+func (s *Session) sessionValues() url.Values {
+	v := url.Values{}
+	s.muSessionKey.Lock()
+	v.Set("user", s.sessionKey)
+	s.muSessionKey.Unlock()
+	return v
+}
+
 // A responseMap tracks pending UDP responses by tag, so they can be
 // delivered out of order.
 // This is concurrent safe.

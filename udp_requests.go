@@ -88,3 +88,22 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 		return fmt.Errorf("auth request: bad code %d %s", resp.code, resp.header)
 	}
 }
+
+// logout RPC call.
+// Concurrent safe.
+func (s *Session) logout(ctx context.Context) error {
+	v := s.sessionValues()
+	resp, err := s.request(ctx, "LOGOUT", v)
+	if err != nil {
+		return fmt.Errorf("logout request: %s", err)
+	}
+	s.muSessionKey.Lock()
+	s.sessionKey = ""
+	s.muSessionKey.Unlock()
+	switch resp.code {
+	case 203:
+		return nil
+	default:
+		return fmt.Errorf("logout request: bad code %d %s", resp.code, resp.header)
+	}
+}
