@@ -18,9 +18,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"context"
-	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"io"
@@ -134,71 +132,6 @@ func (s *Session) Close() {
 	// Won't have new requests since connection is closed.
 	s.responses.close()
 	s.wg.Wait()
-}
-
-// encrypt RPC call.
-// Not concurrent safe.
-func (s *Session) encrypt(ctx context.Context, user string, key string) error {
-	v := url.Values{}
-	v.Set("user", user)
-	v.Set("type", "1")
-	resp, err := s.request(ctx, "ENCRYPT", v)
-	if err != nil {
-		return fmt.Errorf("encrypt: %s", err)
-	}
-	switch resp.code {
-	case 209:
-		parts := strings.SplitN(resp.header, " ", 2)
-		salt := parts[0]
-		sum := md5.Sum([]byte(key + salt))
-		s.block, err = aes.NewCipher(sum[:])
-		if err != nil {
-			return fmt.Errorf("encrypt: %s", err)
-		}
-		return nil
-	default:
-		return fmt.Errorf("encrypt: bad code %d %q", resp.code, resp.header)
-	}
-}
-
-// auth RPC call
-// Concurrent safe.
-func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
-	v := url.Values{}
-	v.Set("user", cfg.UserName)
-	v.Set("pass", cfg.UserPassword)
-	v.Set("protover", protoVer)
-	v.Set("client", cfg.ClientName)
-	v.Set("clientver", strconv.Itoa(int(cfg.ClientVersion)))
-	v.Set("nat", "1")
-	v.Set("comp", "1")
-	resp, err := s.request(ctx, "AUTH", v)
-	if err != nil {
-		return fmt.Errorf("auth request: %s", err)
-	}
-	switch resp.code {
-	case 201:
-		s.log("new anidb UDP API version available")
-		// TODO Expose update available info to library clients
-		fallthrough
-	case 200:
-		parts := strings.SplitN(resp.header, " ", 3)
-		if len(parts) < 3 {
-			return fmt.Errorf("auth request: invalid response header %q", resp.header)
-		}
-		s.muSessionKey.Lock()
-		s.sessionKey = parts[0]
-		s.muSessionKey.Unlock()
-		// TODO Make address comparison reliable
-		if s.conn.LocalAddr().String() != parts[1] {
-			s.muIsNAT.Lock()
-			s.isNAT = true
-			s.muIsNAT.Unlock()
-		}
-		return nil
-	default:
-		return fmt.Errorf("auth request: bad code %d %s", resp.code, resp.header)
-	}
 }
 
 // request performs a UDP request.  Handles retries.
