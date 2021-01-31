@@ -25,7 +25,7 @@ import (
 )
 
 // encrypt RPC call.
-// Not concurrent safe.
+// Concurrent safe.
 func (s *Session) encrypt(ctx context.Context, user string, key string) error {
 	v := url.Values{}
 	v.Set("user", user)
@@ -39,7 +39,9 @@ func (s *Session) encrypt(ctx context.Context, user string, key string) error {
 		parts := strings.SplitN(resp.header, " ", 2)
 		salt := parts[0]
 		sum := md5.Sum([]byte(key + salt))
+		s.muBlock.Lock()
 		s.block, err = aes.NewCipher(sum[:])
+		s.muBlock.Unlock()
 		if err != nil {
 			return fmt.Errorf("encrypt: %s", err)
 		}

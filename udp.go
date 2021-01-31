@@ -119,9 +119,8 @@ type Session struct {
 	sessionKey   string
 	muIsNAT      sync.Mutex
 	isNAT        bool
-
-	// Unsafe concurrent set
-	block cipher.Block
+	muBlock      sync.Mutex
+	block        cipher.Block
 }
 
 // Close immediately closes the session.
@@ -163,9 +162,11 @@ func (s *Session) requestOnce(ctx context.Context, cmd string, args url.Values) 
 	t := s.tagCounter.next()
 	args.Set("tag", string(t))
 	req := []byte(cmd + " " + args.Encode())
+	s.muBlock.Lock()
 	if s.block != nil {
 		req = encrypt(s.block, req)
 	}
+	s.muBlock.Unlock()
 	if err := s.limiter.Wait(ctx); err != nil {
 		return response{}, err
 	}
