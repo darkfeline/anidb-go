@@ -131,7 +131,6 @@ func (s *Session) Close() {
 	defer cf()
 	_ = s.logout(ctx)
 	_ = s.conn.Close()
-	// Won't have new requests since connection is closed.
 	s.responses.close()
 	s.wg.Wait()
 }
@@ -293,6 +292,7 @@ func (m *responseMap) log(format string, v ...interface{}) {
 }
 
 // close delivers empty bytes to all pending responses.
+// Doesn't handle any new pending responses created while close is running.
 func (m *responseMap) close() {
 	m.m.Range(func(key, value interface{}) bool {
 		m.deliver(key.(responseTag), nil)
