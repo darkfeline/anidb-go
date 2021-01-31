@@ -299,6 +299,7 @@ func (s *Session) handleResponseData(data []byte) {
 	}
 }
 
+// concurrent safe
 func (s *Session) log(format string, v ...interface{}) {
 	if s.logger == nil {
 		return
