@@ -127,7 +127,9 @@ type Session struct {
 // Close immediately closes the session.
 // Waits for any goroutines to exit.
 func (s *Session) Close() {
-	// XXXX logout
+	ctx, cf := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cf()
+	_ = s.logout(ctx)
 	_ = s.conn.Close()
 	// Won't have new requests since connection is closed.
 	s.responses.close()
