@@ -75,6 +75,8 @@ func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
 		logger:  c.Logger,
 	}
 	s.responses.logger = c.Logger
+	go s.handleResponses()
+	// XXXXXXXXXXXXX add request pipe goroutine
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
 			return nil, fmt.Errorf("start anidb UDP: %s", err)
@@ -91,7 +93,6 @@ func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
 	// keepalive
 	// logout
 
-	go s.handleResponses()
 	return s, nil
 }
 
