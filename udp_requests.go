@@ -30,7 +30,7 @@ func (s *Session) encrypt(ctx context.Context, user string, key string) error {
 	v := url.Values{}
 	v.Set("user", user)
 	v.Set("type", "1")
-	resp, err := s.request(ctx, "ENCRYPT", v)
+	resp, err := s.p.request(ctx, "ENCRYPT", v)
 	if err != nil {
 		return fmt.Errorf("encrypt: %s", err)
 	}
@@ -39,12 +39,11 @@ func (s *Session) encrypt(ctx context.Context, user string, key string) error {
 		parts := strings.SplitN(resp.header, " ", 2)
 		salt := parts[0]
 		sum := md5.Sum([]byte(key + salt))
-		s.muBlock.Lock()
-		s.block, err = aes.NewCipher(sum[:])
-		s.muBlock.Unlock()
+		b, err := aes.NewCipher(sum[:])
 		if err != nil {
 			return fmt.Errorf("encrypt: %s", err)
 		}
+		s.p.setBlock(b)
 		return nil
 	default:
 		return fmt.Errorf("encrypt: bad code %d %q", resp.code, resp.header)
@@ -62,7 +61,7 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 	v.Set("clientver", strconv.Itoa(int(cfg.ClientVersion)))
 	v.Set("nat", "1")
 	v.Set("comp", "1")
-	resp, err := s.request(ctx, "AUTH", v)
+	resp, err := s.p.request(ctx, "AUTH", v)
 	if err != nil {
 		return fmt.Errorf("auth request: %s", err)
 	}
@@ -76,14 +75,14 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 		if len(parts) < 3 {
 			return fmt.Errorf("auth request: invalid response header %q", resp.header)
 		}
-		s.muSessionKey.Lock()
+		s.sessionKeyMu.Lock()
 		s.sessionKey = parts[0]
-		s.muSessionKey.Unlock()
-		// TODO Make address comparison reliable
-		if s.conn.LocalAddr().String() != parts[1] {
-			s.muIsNAT.Lock()
+		s.sessionKeyMu.Unlock()
+		// TODO Make address comparison more reliable
+		if s.p.conn.LocalAddr().String() != parts[1] {
+			s.isNATMu.Lock()
 			s.isNAT = true
-			s.muIsNAT.Unlock()
+			s.isNATMu.Unlock()
 		}
 		return nil
 	default:
@@ -95,13 +94,13 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 // Concurrent safe.
 func (s *Session) logout(ctx context.Context) error {
 	v := s.sessionValues()
-	resp, err := s.request(ctx, "LOGOUT", v)
+	resp, err := s.p.request(ctx, "LOGOUT", v)
 	if err != nil {
 		return fmt.Errorf("logout request: %s", err)
 	}
-	s.muSessionKey.Lock()
+	s.sessionKeyMu.Lock()
 	s.sessionKey = ""
-	s.muSessionKey.Unlock()
+	s.sessionKeyMu.Unlock()
 	switch resp.code {
 	case 203:
 		return nil
