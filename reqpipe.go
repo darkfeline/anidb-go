@@ -30,6 +30,15 @@ import (
 	"time"
 )
 
+// A closeLimiter is a Limiter that has a Close method to unblock all waiters.
+type closeLimiter interface {
+	Limiter
+	// close unblocks all waiters.
+	// This method must be safe to call concurrently.
+	// All Wait calls afterward must also be unblocked.
+	close()
+}
+
 // A reqPipe serializes and demuxes AniDB UDP requests.
 type reqPipe struct {
 	// Concurrency safe
@@ -39,7 +48,7 @@ type reqPipe struct {
 
 	// Set on init
 	conn    *net.UDPConn
-	limiter Limiter
+	limiter closeLimiter
 	logger  Logger
 
 	// Mutex protected
@@ -47,7 +56,7 @@ type reqPipe struct {
 	blockMu sync.Mutex
 }
 
-func newReqPipe(conn *net.UDPConn, l Limiter, logger Logger) *reqPipe {
+func newReqPipe(conn *net.UDPConn, l closeLimiter, logger Logger) *reqPipe {
 	p := &reqPipe{
 		conn:    conn,
 		limiter: l,
@@ -90,6 +99,7 @@ func (p *reqPipe) setBlock(b cipher.Block) {
 // Concurrency safe.
 func (p *reqPipe) close() {
 	_ = p.conn.Close()
+	p.limiter.close()
 	p.responses.close()
 	p.wg.Wait()
 }

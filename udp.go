@@ -160,3 +160,8 @@ func (l udpLimiter) Wait(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (l udpLimiter) close() {
+	l.short.SetLimit(rate.Inf)
+	l.long.SetLimit(rate.Inf)
+}
