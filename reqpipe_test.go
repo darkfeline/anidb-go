@@ -14,7 +14,12 @@
 
 package anidb
 
-import "testing"
+import (
+	"crypto/aes"
+	"crypto/rand"
+	"reflect"
+	"testing"
+)
 
 func TestReqPipe(t *testing.T) {
 	t.Parallel()
@@ -30,4 +35,46 @@ func TestParseResponse(t *testing.T) {
 
 func TestEncryptDecrypt(t *testing.T) {
 	t.Parallel()
+	// AES-128, 16 bytes
+	const key = "\x80\xa2_\xcaa\xb6\f\xa9X\xa5\xff\x9am\xebי"
+	cb, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		desc string
+		size int
+	}{
+		{desc: "3 bytes", size: 3},
+		{desc: "16 bytes", size: 16},
+		{desc: "17 bytes", size: 17},
+		{desc: "31 bytes", size: 31},
+		{desc: "32 bytes", size: 32},
+		{desc: "33 bytes", size: 33},
+		{desc: "64 bytes", size: 64},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.desc, func(t *testing.T) {
+			t.Parallel()
+			orig := make([]byte, c.size)
+			if _, err := rand.Read(orig); err != nil {
+				t.Fatal(err)
+			}
+			data := make([]byte, len(orig))
+			copy(data, orig)
+			data = encrypt(cb, data)
+			if reflect.DeepEqual(orig, data) {
+				t.Fatalf("data not encrypted")
+			}
+			t.Logf("encrypted data is %d bytes", len(data))
+			data, err = decrypt(cb, data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(orig, data) {
+				t.Errorf("decrypted not equal, got %x, want %x", data, orig)
+			}
+		})
+	}
 }

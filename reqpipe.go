@@ -350,30 +350,21 @@ func decompress(b []byte) ([]byte, error) {
 }
 
 // in place
+// ECB, blockwise encryption
+// PKCS#5 padding
 func encrypt(c cipher.Block, b []byte) []byte {
 	bs := c.BlockSize()
 	if bs > 256 {
 		panic(fmt.Sprintf("Unsupported block size %d", bs))
 	}
-	for i := 0; i < len(b); i += bs {
-		// PKCS#5 padding
-		if i+bs >= len(b) {
-			gap := bs - (len(b) % bs)
-			pad := make([]byte, gap)
-			for i := range pad {
-				pad[i] = byte(gap)
-			}
-			b = append(b, pad...)
-		}
-		c.Encrypt(b[i:], b[i:])
+	gap := bs - (len(b) % bs)
+	pad := make([]byte, gap)
+	for i := range pad {
+		pad[i] = byte(gap)
 	}
-	// PKCS#5 padding for full block
-	if len(b)%bs == 0 {
-		pad := make([]byte, bs)
-		for i := range pad {
-			pad[i] = byte(bs)
-		}
-		b = append(b, pad...)
+	b = append(b, pad...)
+	for i := 0; i < len(b); i += bs {
+		c.Encrypt(b[i:], b[i:])
 	}
 	return b
 }
