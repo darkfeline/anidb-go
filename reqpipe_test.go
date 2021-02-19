@@ -31,6 +31,22 @@ func TestResponseMap(t *testing.T) {
 
 func TestParseResponse(t *testing.T) {
 	t.Parallel()
+	const data = `720 1234 NOTIFICATION - NEW FILE
+1234|12|34`
+	got, err := parseResponse([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := response{
+		code:   720,
+		header: "1234 NOTIFICATION - NEW FILE",
+		rows: [][]string{
+			{"1234", "12", "34"},
+		},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Got %#v, want %#v", got, want)
+	}
 }
 
 func TestEncryptDecrypt(t *testing.T) {
