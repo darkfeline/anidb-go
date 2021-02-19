@@ -33,7 +33,7 @@ func TestResponseMap(t *testing.T) {
 		t.Parallel()
 		m := responseMap{logger: testLogger{t}}
 		ctx, cf := context.WithTimeout(context.Background(), time.Second)
-		defer cf()
+		t.Cleanup(cf)
 		t.Run("first tag", func(t *testing.T) {
 			c := m.waitFor("shefi")
 			t.Parallel()
@@ -62,6 +62,26 @@ func TestResponseMap(t *testing.T) {
 		})
 		m.deliver("kyaru", []byte("kiruya"))
 		m.deliver("shefi", []byte("shifuna"))
+	})
+	t.Run("close", func(t *testing.T) {
+		t.Parallel()
+		m := responseMap{logger: testLogger{t}}
+		ctx, cf := context.WithTimeout(context.Background(), time.Second)
+		t.Cleanup(cf)
+		t.Run("first tag", func(t *testing.T) {
+			c := m.waitFor("shefi")
+			t.Parallel()
+			select {
+			case got := <-c:
+				const want = ""
+				if string(got) != want {
+					t.Errorf("Got %q, want %q", got, want)
+				}
+			case <-ctx.Done():
+				t.Fatal(ctx.Err())
+			}
+		})
+		m.close()
 	})
 }
 
