@@ -121,18 +121,20 @@ func (p *reqPipe) requestOnce(ctx context.Context, cmd string, args url.Values) 
 	if err := p.limiter.Wait(ctx); err != nil {
 		return response{}, err
 	}
+	c := p.responses.waitFor(t)
 	if _, err := p.conn.Write(req); err != nil {
 		return response{}, err
 	}
-	d, err := p.responses.waitFor(ctx, t)
-	if err != nil {
-		return response{}, err
+	select {
+	case <-ctx.Done():
+		return response{}, ctx.Err()
+	case d := <-c:
+		resp, err := parseResponse(d)
+		if err != nil {
+			return response{}, err
+		}
+		return resp, nil
 	}
-	resp, err := parseResponse(d)
-	if err != nil {
-		return response{}, err
-	}
-	return resp, nil
 }
 
 // handleResponses handles incoming responses.
@@ -212,18 +214,13 @@ type responseMap struct {
 	logger Logger
 }
 
-func (m *responseMap) waitFor(ctx context.Context, t responseTag) ([]byte, error) {
+func (m *responseMap) waitFor(t responseTag) <-chan []byte {
 	c := make(chan []byte, 1)
 	_, loaded := m.m.LoadOrStore(t, c)
 	if loaded {
 		panic(fmt.Sprintf("dupe tag %q", t))
 	}
-	select {
-	case b := <-c:
-		return b, nil
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
+	return c
 }
 
 func (m *responseMap) deliver(t responseTag, b []byte) {
@@ -232,7 +229,7 @@ func (m *responseMap) deliver(t responseTag, b []byte) {
 		m.log("Unknown tag %q for response", t)
 		return
 	}
-	c := v.(chan<- []byte)
+	c := v.(chan []byte)
 	c <- b
 	close(c)
 }
