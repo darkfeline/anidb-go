@@ -122,6 +122,7 @@ func (p *reqPipe) requestOnce(ctx context.Context, cmd string, args url.Values) 
 		return response{}, err
 	}
 	c := p.responses.waitFor(t)
+	defer p.responses.cancel(t)
 	if _, err := p.conn.Write(req); err != nil {
 		return response{}, err
 	}
@@ -232,6 +233,10 @@ func (m *responseMap) deliver(t responseTag, b []byte) {
 	c := v.(chan []byte)
 	c <- b
 	close(c)
+}
+
+func (m *responseMap) cancel(t responseTag) {
+	m.m.Delete(t)
 }
 
 func (m *responseMap) log(format string, v ...interface{}) {
