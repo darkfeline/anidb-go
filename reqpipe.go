@@ -74,7 +74,7 @@ func newReqPipe(conn net.Conn, l closeLimiter, logger Logger) *reqPipe {
 // args is modified with a new tag.
 // Concurrency safe.
 func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (response, error) {
-	p.logger.Printf("calling request cmd %s", cmd)
+	p.logger.Printf("Starting request cmd %s", cmd)
 	for ctx.Err() == nil {
 		resp, err := p.requestOnce(ctx, cmd, args)
 		if err != nil {
