@@ -46,9 +46,9 @@ type UDPConfig struct {
 	Logger Logger
 }
 
-// A Session represents an authenticated UDP session.
-// A Session's methods are concurrency safe.
-type Session struct {
+// A udpSession represents an authenticated UDP session.
+// A udpSession's methods are concurrency safe.
+type udpSession struct {
 	// Concurrency safe
 	wg         sync.WaitGroup
 	responses  responseMap
@@ -68,7 +68,7 @@ type Session struct {
 // StartUDP starts a UDP session.
 // context is used for initializing the session only.
 // You must close the session after use.
-func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
+func StartUDP(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	srv := c.Server
 	if srv == nil {
 		var err error
@@ -81,7 +81,7 @@ func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("start anidb UDP: %s", err)
 	}
-	s := &Session{
+	s := &udpSession{
 		p:      newReqPipe(conn, newUDPLimiter(), c.Logger),
 		logger: c.Logger,
 	}
@@ -109,7 +109,7 @@ func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
 
 // Close immediately closes the session.
 // Waits for any goroutines to exit.
-func (s *Session) Close() {
+func (s *udpSession) Close() {
 	ctx, cf := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cf()
 	_ = s.logout(ctx)
@@ -117,7 +117,7 @@ func (s *Session) Close() {
 	s.wg.Wait()
 }
 
-func (s *Session) sessionValues() url.Values {
+func (s *udpSession) sessionValues() url.Values {
 	v := url.Values{}
 	s.sessionKeyMu.Lock()
 	v.Set("user", s.sessionKey)

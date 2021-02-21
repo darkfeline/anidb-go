@@ -26,7 +26,7 @@ import (
 
 // encrypt RPC call.
 // Concurrent safe.
-func (s *Session) encrypt(ctx context.Context, user string, key string) error {
+func (s *udpSession) encrypt(ctx context.Context, user string, key string) error {
 	v := url.Values{}
 	v.Set("user", user)
 	v.Set("type", "1")
@@ -52,7 +52,7 @@ func (s *Session) encrypt(ctx context.Context, user string, key string) error {
 
 // auth RPC call.
 // Concurrent safe.
-func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
+func (s *udpSession) auth(ctx context.Context, cfg *UDPConfig) error {
 	v := url.Values{}
 	v.Set("user", cfg.UserName)
 	v.Set("pass", cfg.UserPassword)
@@ -92,7 +92,7 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 
 // logout RPC call.
 // Concurrent safe.
-func (s *Session) logout(ctx context.Context) error {
+func (s *udpSession) logout(ctx context.Context) error {
 	v := s.sessionValues()
 	resp, err := s.p.request(ctx, "LOGOUT", v)
 	if err != nil {
