@@ -101,8 +101,8 @@ func (k *keepAlive) background() {
 		}
 		port, err := keepAlivePing(k.ctx, k.r)
 		if err != nil {
-			// TODO Faster retry on error
 			k.logger.Printf("Error: %s", err)
+			k.interval += 10 * time.Second
 			continue
 		}
 		k.updateInterval(time.Now(), port)
@@ -118,8 +118,17 @@ func (k *keepAlive) updateInterval(t time.Time, port string) {
 	interval := k.sleeper.sinceActive(t)
 	k.sleeper.activate(t)
 	if k.lastPort != port {
+		// If the actual interval is much greater than the
+		// planned interval, then we can't infer anything from
+		// the port change.  This should only happen when the
+		// ping fails multiple times and is retried.
+		if interval-k.interval > 10*time.Second {
+			k.logger.Printf("Port reset, but interval %s much larger than expected %s",
+				interval, k.interval)
+			return
+		}
 		k.timeoutHit = true
-		k.interval = interval - (10 * time.Second)
+		k.interval = k.interval - (10 * time.Second)
 		k.logger.Printf("Port reset, lowering interval to %s", k.interval)
 		if k.interval < minKeepAliveInterval {
 			k.interval = minKeepAliveInterval
@@ -127,7 +136,7 @@ func (k *keepAlive) updateInterval(t time.Time, port string) {
 		}
 		k.lastPort = port
 	} else if !k.timeoutHit {
-		k.interval = k.interval + (10 * time.Second)
+		k.interval = interval + (10 * time.Second)
 		k.logger.Printf("Timeout not hit, raising interval to %s", k.interval)
 		if k.interval > maxKeepAliveInterval {
 			k.interval = maxKeepAliveInterval
