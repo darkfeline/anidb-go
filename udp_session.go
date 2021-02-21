@@ -69,16 +69,17 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	if srv == "" {
 		srv = defaultServer
 	}
+	logger := c.Logger
+	if logger == nil {
+		logger = nullLogger{}
+	}
 	conn, err := net.Dial("udp", srv)
 	if err != nil {
 		return nil, fmt.Errorf("start UDP session: %s", err)
 	}
 	s := &udpSession{
-		p:      newReqPipe(conn, newUDPLimiter(), c.Logger),
-		logger: c.Logger,
-	}
-	if s.logger == nil {
-		s.logger = nullLogger{}
+		p:      newReqPipe(conn, newUDPLimiter(), logger),
+		logger: logger,
 	}
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
