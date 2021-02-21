@@ -32,10 +32,8 @@ const defaultServer = "api.anidb.net:9000"
 
 // An UDPConfig is used for configuring an AniDB UDP client.
 type UDPConfig struct {
-	// If nil, use default server.
-	Server *net.UDPAddr
-	// Local source port
-	Local         *net.UDPAddr
+	// If empty, use default server.
+	Server        string
 	UserName      string
 	UserPassword  string
 	ClientName    string
@@ -50,9 +48,7 @@ type UDPConfig struct {
 // A udpSession's methods are concurrency safe.
 type udpSession struct {
 	// Concurrency safe
-	wg         sync.WaitGroup
-	responses  responseMap
-	tagCounter tagCounter
+	wg sync.WaitGroup
 
 	// Set on init
 	p      *reqPipe
@@ -70,14 +66,10 @@ type udpSession struct {
 // You must close the session after use.
 func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	srv := c.Server
-	if srv == nil {
-		var err error
-		srv, err = net.ResolveUDPAddr("udp", defaultServer)
-		if err != nil {
-			return nil, fmt.Errorf("start anidb UDP: %s", err)
-		}
+	if srv == "" {
+		srv = defaultServer
 	}
-	conn, err := net.DialUDP("udp", c.Local, srv)
+	conn, err := net.Dial("udp", srv)
 	if err != nil {
 		return nil, fmt.Errorf("start anidb UDP: %s", err)
 	}
