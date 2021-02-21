@@ -96,6 +96,40 @@ func TestReqPipe(t *testing.T) {
 	})
 }
 
+func TestReqPipe_close_requests(t *testing.T) {
+	t.Parallel()
+	ctx := testContext(t, time.Second)
+	pc, c := newUDPPipe(t, time.Second)
+	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
+	t.Cleanup(p.close)
+
+	t.Run("first request", func(t *testing.T) {
+		t.Parallel()
+		_, err := p.request(ctx, "PING", url.Values{"nat": []string{"1"}})
+		if err == nil {
+			t.Errorf("Expected error")
+		}
+	})
+	t.Run("second request", func(t *testing.T) {
+		t.Parallel()
+		_, err := p.request(ctx, "PING", url.Values{})
+		if err == nil {
+			t.Errorf("Expected error")
+		}
+	})
+	t.Run("test server", func(t *testing.T) {
+		t.Parallel()
+		data := make([]byte, 200)
+		for i := 0; i < 2; i++ {
+			_, _, err := pc.ReadFrom(data)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		p.close()
+	})
+}
+
 func TestReqPipe_compression(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
