@@ -130,6 +130,8 @@ func TestReqPipe_close_requests(t *testing.T) {
 	})
 }
 
+// TODO Add test for reqPipe decryption.
+
 func TestReqPipe_compression(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
