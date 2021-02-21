@@ -37,16 +37,14 @@ type keepAlive struct {
 	r      udpRequester
 	logger Logger // Must be non-nil
 
-	wg         sync.WaitGroup
-	sleepTimer *time.Timer
-	ctx        context.Context
-	cf         context.CancelFunc
+	wg      sync.WaitGroup
+	sleeper inactiveSleeper
+	ctx     context.Context
+	cf      context.CancelFunc
 
-	lastRequest   time.Time
-	lastRequestMu sync.Mutex
-	lastPort      string
-	interval      time.Duration
-	timeoutHit    bool
+	lastPort   string
+	interval   time.Duration
+	timeoutHit bool
 }
 
 // newKeepAlive starts a keepalive goroutine to keep the AniDB UDP
@@ -78,9 +76,7 @@ func (k *keepAlive) start() error {
 // order to accurately calibrate the keepalive interval.
 // Concurrent safe.
 func (k *keepAlive) notify(t time.Time) {
-	k.lastRequestMu.Lock()
-	k.lastRequest = t
-	k.lastRequestMu.Unlock()
+	k.sleeper.activate(t)
 }
 
 func (k *keepAlive) stop() {
@@ -95,9 +91,8 @@ func (k *keepAlive) initialize() error {
 	if err != nil {
 		return err
 	}
-	k.notify(time.Now())
+	k.sleeper.activate(time.Now())
 	k.lastPort = port
-	k.sleepTimer = time.NewTimer(time.Hour)
 	k.interval = time.Minute
 	k.ctx, k.cf = context.WithCancel(context.Background())
 	return nil
@@ -106,7 +101,7 @@ func (k *keepAlive) initialize() error {
 // background goroutine
 func (k *keepAlive) background() {
 	for {
-		if err := k.sleepUntilInterval(k.ctx); err != nil {
+		if err := k.sleeper.sleep(k.ctx, k.interval); err != nil {
 			return
 		}
 		port, err := keepAlivePing(k.ctx, k.r)
@@ -120,10 +115,8 @@ func (k *keepAlive) background() {
 }
 
 func (k *keepAlive) updateInterval(t time.Time, port string) {
-	k.lastRequestMu.Lock()
-	interval := t.Sub(k.lastRequest)
-	k.lastRequest = t
-	k.lastRequestMu.Unlock()
+	interval := k.sleeper.sinceActive(t)
+	k.sleeper.activate(t)
 	if k.lastPort != port {
 		k.timeoutHit = true
 		k.interval = interval - (10 * time.Second)
@@ -135,19 +128,38 @@ func (k *keepAlive) updateInterval(t time.Time, port string) {
 	}
 }
 
-// sleepUntilInterval sleeps until the interval is reached since last
-// request or context expires.
+// An inactiveSleeper tracks sleeping for a period of inactivity.
+// Zero value is ready for use.
+type inactiveSleeper struct {
+	tmr          *time.Timer
+	lastActive   time.Time
+	lastActiveMu sync.Mutex
+}
+
+func (s *inactiveSleeper) activate(t time.Time) {
+	s.lastActiveMu.Lock()
+	if t.After(s.lastActive) {
+		s.lastActive = t
+	}
+	s.lastActiveMu.Unlock()
+}
+
+// sleep sleeps until the duration is reached since last activity or
+// context expires.
 // Returns an error for context expiration.
-func (k *keepAlive) sleepUntilInterval(ctx context.Context) error {
-	elapsed := time.Now().Sub(k.lastRequest)
-	for elapsed < k.interval {
-		if !k.sleepTimer.Stop() {
-			<-k.sleepTimer.C
+func (s *inactiveSleeper) sleep(ctx context.Context, d time.Duration) error {
+	elapsed := time.Duration(0)
+	for elapsed < d {
+		if s.tmr == nil {
+			s.tmr = time.NewTimer(time.Hour)
 		}
-		k.sleepTimer.Reset(k.interval - elapsed)
+		if !s.tmr.Stop() {
+			<-s.tmr.C
+		}
+		s.tmr.Reset(d - elapsed)
 		select {
-		case t := <-k.sleepTimer.C:
-			elapsed = t.Sub(k.lastRequest)
+		case t := <-s.tmr.C:
+			elapsed = s.sinceActive(t)
 		case <-ctx.Done():
 			return ctx.Err()
 		}
@@ -155,17 +167,16 @@ func (k *keepAlive) sleepUntilInterval(ctx context.Context) error {
 	return nil
 }
 
-// An inactiveSleeper tracks sleeping for a period of inactivity.
-type inactiveSleeper struct {
-	interval time.Duration
+func (s *inactiveSleeper) sinceActive(t time.Time) time.Duration {
+	s.lastActiveMu.Lock()
+	defer s.lastActiveMu.Unlock()
+	return t.Sub(s.lastActive)
 }
 
-func (s *inactiveSleeper) activate(t time.Time) {
-
-}
-
-func (s *inactiveSleeper) sleep(t time.Time) {
-
+func (s *inactiveSleeper) afterActive(d time.Duration) time.Time {
+	s.lastActiveMu.Lock()
+	defer s.lastActiveMu.Unlock()
+	return s.lastActive.Add(d)
 }
 
 func keepAlivePing(ctx context.Context, r udpRequester) (port string, _ error) {

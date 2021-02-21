@@ -36,7 +36,7 @@ func TestKeepAlive(t *testing.T) {
 	t.Cleanup(k.stop)
 	t.Run("raise", func(t *testing.T) {
 		prevInterval := k.interval
-		newTime := k.lastRequest.Add(prevInterval)
+		newTime := k.sleeper.afterActive(prevInterval)
 		k.updateInterval(newTime, "123")
 		if k.interval <= prevInterval {
 			t.Errorf("Expected new interval greater than %s; got %s",
@@ -45,7 +45,7 @@ func TestKeepAlive(t *testing.T) {
 	})
 	t.Run("raise 2", func(t *testing.T) {
 		prevInterval := k.interval
-		newTime := k.lastRequest.Add(prevInterval)
+		newTime := k.sleeper.afterActive(prevInterval)
 		k.updateInterval(newTime, "123")
 		if k.interval <= prevInterval {
 			t.Errorf("Expected new interval greater than %s; got %s",
@@ -54,7 +54,7 @@ func TestKeepAlive(t *testing.T) {
 	})
 	t.Run("timeout", func(t *testing.T) {
 		prevInterval := k.interval
-		newTime := k.lastRequest.Add(prevInterval)
+		newTime := k.sleeper.afterActive(prevInterval)
 		k.updateInterval(newTime, "555")
 		if k.interval >= prevInterval {
 			t.Errorf("Expected new interval less than %s; got %s",
@@ -63,7 +63,7 @@ func TestKeepAlive(t *testing.T) {
 	})
 	t.Run("sustain", func(t *testing.T) {
 		prevInterval := k.interval
-		newTime := k.lastRequest.Add(prevInterval)
+		newTime := k.sleeper.afterActive(prevInterval)
 		k.updateInterval(newTime, "555")
 		if k.interval != prevInterval {
 			t.Errorf("Expected new interval equal to %s; got %s",
