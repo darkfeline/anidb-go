@@ -22,11 +22,6 @@ import (
 	"time"
 )
 
-const (
-	minKeepAliveInterval = 30 * time.Second
-	maxKeepAliveInterval = 5 * time.Minute
-)
-
 type udpRequester interface {
 	request(context.Context, string, url.Values) (response, error)
 }
@@ -114,6 +109,8 @@ func (k *keepAlive) background() {
 	}
 }
 
+const minKeepAliveInterval = 30 * time.Second
+
 func (k *keepAlive) updateInterval(t time.Time, port string) {
 	interval := k.sleeper.sinceActive(t)
 	k.sleeper.activate(t)
@@ -121,6 +118,10 @@ func (k *keepAlive) updateInterval(t time.Time, port string) {
 		k.timeoutHit = true
 		k.interval = interval - (10 * time.Second)
 		k.logger.Printf("Port reset, lowering interval to %s", k.interval)
+		if k.interval < minKeepAliveInterval {
+			k.interval = minKeepAliveInterval
+			k.logger.Printf("Minimum interval restricted to %s", k.interval)
+		}
 		k.lastPort = port
 	} else if !k.timeoutHit {
 		k.interval = k.interval + (10 * time.Second)
