@@ -31,7 +31,7 @@ func TestResponseMap(t *testing.T) {
 	t.Parallel()
 	t.Run("happy path", func(t *testing.T) {
 		t.Parallel()
-		m := responseMap{logger: testLogger{t}}
+		m := responseMap{logger: testLogger{t, "response map: "}}
 		ctx, cf := context.WithTimeout(context.Background(), time.Second)
 		t.Cleanup(cf)
 		t.Run("first tag", func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestResponseMap(t *testing.T) {
 	})
 	t.Run("close", func(t *testing.T) {
 		t.Parallel()
-		m := responseMap{logger: testLogger{t}}
+		m := responseMap{logger: testLogger{t, "response map: "}}
 		ctx, cf := context.WithTimeout(context.Background(), time.Second)
 		t.Cleanup(cf)
 		t.Run("first tag", func(t *testing.T) {
@@ -152,9 +152,11 @@ func TestEncryptDecrypt(t *testing.T) {
 }
 
 type testLogger struct {
-	t *testing.T
+	t      *testing.T
+	prefix string
 }
 
 func (l testLogger) Printf(format string, v ...interface{}) {
-	l.t.Logf(format, v...)
+	l.t.Helper()
+	l.t.Logf(l.prefix+format, v...)
 }
