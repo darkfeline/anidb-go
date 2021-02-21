@@ -18,13 +18,82 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/rand"
+	"fmt"
+	"net"
+	"net/url"
 	"reflect"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
 
 func TestReqPipe(t *testing.T) {
 	t.Parallel()
+	ctx, cf := context.WithTimeout(context.Background(), time.Second)
+	t.Cleanup(cf)
+	pc, c := newUDPPipe(t, time.Second)
+	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
+	t.Cleanup(p.close)
+
+	t.Run("first request", func(t *testing.T) {
+		t.Parallel()
+		resp, err := p.request(ctx, "PING", url.Values{"nat": []string{"1"}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := response{
+			code:   300,
+			header: "PONG",
+			rows:   [][]string{{"123"}},
+		}
+		if !reflect.DeepEqual(resp, want) {
+			t.Errorf("Got %#v; want %#v", resp, want)
+		}
+	})
+	t.Run("second request", func(t *testing.T) {
+		t.Parallel()
+		resp, err := p.request(ctx, "PING", url.Values{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := response{
+			code:   300,
+			header: "PONG",
+		}
+		if !reflect.DeepEqual(resp, want) {
+			t.Errorf("Got %#v; want %#v", resp, want)
+		}
+	})
+	t.Run("test server", func(t *testing.T) {
+		t.Parallel()
+		data := make([]byte, 200)
+		tr := regexp.MustCompile(`tag=([0-9]+)`)
+		var tag1, tag2 responseTag
+		for i := 0; i < 2; i++ {
+			t.Logf("Reading packet")
+			n, _, err := pc.ReadFrom(data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("Done reading packet")
+			m := tr.FindSubmatch(data[:n])
+			if strings.Contains(string(data[:n]), "nat=1") {
+				tag1 = responseTag(m[1])
+			} else {
+				tag2 = responseTag(m[1])
+			}
+		}
+		addr := c.LocalAddr()
+		_, err := pc.WriteTo([]byte(fmt.Sprintf("%s 300 PONG\n123", tag1)), addr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = pc.WriteTo([]byte(fmt.Sprintf("%s 300 PONG", tag2)), addr)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func TestResponseMap(t *testing.T) {
@@ -150,6 +219,35 @@ func TestEncryptDecrypt(t *testing.T) {
 		})
 	}
 }
+
+func newUDPPipe(t *testing.T, timeout time.Duration) (net.PacketConn, net.Conn) {
+	t.Helper()
+	pc, err := net.ListenPacket("udp", "127.0.0.1:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { pc.Close() })
+	if err := pc.SetDeadline(time.Now().Add(timeout)); err != nil {
+		t.Fatal(err)
+	}
+	c, err := net.Dial("udp", pc.LocalAddr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { c.Close() })
+	if err := c.SetDeadline(time.Now().Add(timeout)); err != nil {
+		t.Fatal(err)
+	}
+	return pc, c
+}
+
+type testLimiter struct{}
+
+func (testLimiter) Wait(context.Context) error {
+	return nil
+}
+
+func (testLimiter) close() {}
 
 type testLogger struct {
 	t      *testing.T
