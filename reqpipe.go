@@ -66,7 +66,11 @@ func newReqPipe(conn net.Conn, limiter closeLimiter, logger Logger) *reqPipe {
 		logger:  logger,
 	}
 	p.responses.logger = logger
-	go p.handleResponses()
+	p.wg.Add(1)
+	go func() {
+		defer p.wg.Done()
+		p.handleResponses()
+	}()
 	return p
 }
 
@@ -133,8 +137,6 @@ func (p *reqPipe) close() {
 // Should be a called as a goroutine.
 // Will exit when connection is closed.
 func (p *reqPipe) handleResponses() {
-	p.wg.Add(1)
-	defer p.wg.Done()
 	buf := make([]byte, 1400) // Max UDP size
 	for {
 		n, readErr := p.conn.Read(buf)
