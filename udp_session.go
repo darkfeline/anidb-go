@@ -65,10 +65,10 @@ type udpSession struct {
 	isNAT        bool
 }
 
-// StartUDP starts a UDP session.
+// startUDPSession starts a UDP session.
 // context is used for initializing the session only.
 // You must close the session after use.
-func StartUDP(ctx context.Context, c *UDPConfig) (*udpSession, error) {
+func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	srv := c.Server
 	if srv == nil {
 		var err error
