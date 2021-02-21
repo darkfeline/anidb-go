@@ -30,8 +30,7 @@ import (
 
 func TestReqPipe(t *testing.T) {
 	t.Parallel()
-	ctx, cf := context.WithTimeout(context.Background(), time.Second)
-	t.Cleanup(cf)
+	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
 	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
 	t.Cleanup(p.close)
@@ -101,8 +100,7 @@ func TestResponseMap(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		t.Parallel()
 		m := responseMap{logger: testLogger{t, "response map: "}}
-		ctx, cf := context.WithTimeout(context.Background(), time.Second)
-		t.Cleanup(cf)
+		ctx := testContext(t, time.Second)
 		t.Run("first tag", func(t *testing.T) {
 			c := m.waitFor("shefi")
 			t.Parallel()
@@ -135,8 +133,7 @@ func TestResponseMap(t *testing.T) {
 	t.Run("close", func(t *testing.T) {
 		t.Parallel()
 		m := responseMap{logger: testLogger{t, "response map: "}}
-		ctx, cf := context.WithTimeout(context.Background(), time.Second)
-		t.Cleanup(cf)
+		ctx := testContext(t, time.Second)
 		t.Run("first tag", func(t *testing.T) {
 			c := m.waitFor("shefi")
 			t.Parallel()
@@ -239,6 +236,12 @@ func newUDPPipe(t *testing.T, timeout time.Duration) (net.PacketConn, net.Conn) 
 		t.Fatal(err)
 	}
 	return pc, c
+}
+
+func testContext(t *testing.T, timeout time.Duration) context.Context {
+	ctx, cf := context.WithTimeout(context.Background(), timeout)
+	t.Cleanup(cf)
+	return ctx
 }
 
 type testLimiter struct{}
