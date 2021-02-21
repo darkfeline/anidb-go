@@ -109,7 +109,10 @@ func (k *keepAlive) background() {
 	}
 }
 
-const minKeepAliveInterval = 30 * time.Second
+const (
+	minKeepAliveInterval = 30 * time.Second
+	maxKeepAliveInterval = 5 * time.Minute
+)
 
 func (k *keepAlive) updateInterval(t time.Time, port string) {
 	interval := k.sleeper.sinceActive(t)
@@ -126,6 +129,10 @@ func (k *keepAlive) updateInterval(t time.Time, port string) {
 	} else if !k.timeoutHit {
 		k.interval = k.interval + (10 * time.Second)
 		k.logger.Printf("Timeout not hit, raising interval to %s", k.interval)
+		if k.interval > maxKeepAliveInterval {
+			k.interval = maxKeepAliveInterval
+			k.logger.Printf("Maximum interval restricted to %s", k.interval)
+		}
 	}
 }
 
