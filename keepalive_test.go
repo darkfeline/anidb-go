@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestKeepAlive(t *testing.T) {
@@ -70,6 +71,52 @@ func TestKeepAlive(t *testing.T) {
 				prevInterval, k.interval)
 		}
 	})
+}
+
+func TestKeepAlive_large_interval_okay(t *testing.T) {
+	t.Parallel()
+	r := &fakeRequester{
+		resp: response{
+			code:   300,
+			header: "PONG",
+			rows:   [][]string{{"123"}},
+		},
+	}
+	k := newKeepAlive(r, testLogger{t, "keepalive: "})
+	if err := k.initialize(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(k.stop)
+	prevInterval := k.interval
+	newTime := k.sleeper.afterActive(prevInterval).Add(time.Minute)
+	k.updateInterval(newTime, "123")
+	if k.interval <= prevInterval+(time.Minute/2) {
+		t.Errorf("Expected new interval greater than %s; got %s",
+			prevInterval, k.interval)
+	}
+}
+
+func TestKeepAlive_large_interval_timeout(t *testing.T) {
+	t.Parallel()
+	r := &fakeRequester{
+		resp: response{
+			code:   300,
+			header: "PONG",
+			rows:   [][]string{{"123"}},
+		},
+	}
+	k := newKeepAlive(r, testLogger{t, "keepalive: "})
+	if err := k.initialize(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(k.stop)
+	prevInterval := k.interval
+	newTime := k.sleeper.afterActive(prevInterval).Add(time.Minute)
+	k.updateInterval(newTime, "555")
+	if k.interval < prevInterval {
+		t.Errorf("Interval %s shouldn't be lower than previous %s",
+			k.interval, prevInterval)
+	}
 }
 
 type fakeRequester struct {
