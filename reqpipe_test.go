@@ -15,6 +15,8 @@
 package anidb
 
 import (
+	"bytes"
+	"compress/flate"
 	"context"
 	"crypto/aes"
 	"crypto/rand"
@@ -89,6 +91,44 @@ func TestReqPipe(t *testing.T) {
 		}
 		_, err = pc.WriteTo([]byte(fmt.Sprintf("%s 300 PONG", tag2)), addr)
 		if err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestReqPipe_compression(t *testing.T) {
+	t.Parallel()
+	ctx := testContext(t, time.Second)
+	pc, c := newUDPPipe(t, time.Second)
+	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
+	t.Cleanup(p.close)
+
+	t.Run("request", func(t *testing.T) {
+		t.Parallel()
+		resp, err := p.request(ctx, "PING", url.Values{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := response{
+			code:   300,
+			header: "PONG",
+		}
+		if !reflect.DeepEqual(resp, want) {
+			t.Errorf("Got %#v; want %#v", resp, want)
+		}
+	})
+	t.Run("test server", func(t *testing.T) {
+		t.Parallel()
+		data := make([]byte, 200)
+		n, _, err := pc.ReadFrom(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tag := parseRequestTag(data[:n])
+		addr := c.LocalAddr()
+		resp := []byte(fmt.Sprintf("%s 300 PONG", tag))
+		resp = append([]byte{0, 0}, compress(resp)...)
+		if _, err := pc.WriteTo(resp, addr); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -221,6 +261,23 @@ var tagRegexp = regexp.MustCompile(`tag=([0-9]+)`)
 func parseRequestTag(b []byte) responseTag {
 	m := tagRegexp.FindSubmatch(b)
 	return responseTag(m[1])
+}
+
+// DEFLATE
+func compress(b []byte) []byte {
+	var buf bytes.Buffer
+	w, err := flate.NewWriter(&buf, 3)
+	if err != nil {
+		panic(err)
+	}
+	defer w.Close()
+	if _, err := w.Write(b); err != nil {
+		panic(err)
+	}
+	if err := w.Close(); err != nil {
+		panic(err)
+	}
+	return buf.Bytes()
 }
 
 func newUDPPipe(t *testing.T, timeout time.Duration) (net.PacketConn, net.Conn) {
