@@ -55,13 +55,13 @@ type reqPipe struct {
 	blockMu sync.Mutex
 }
 
-func newReqPipe(conn net.Conn, l closeLimiter, logger Logger) *reqPipe {
+func newReqPipe(conn net.Conn, limiter closeLimiter, logger Logger) *reqPipe {
 	if logger == nil {
 		logger = nullLogger{}
 	}
 	p := &reqPipe{
 		conn:    conn,
-		limiter: l,
+		limiter: limiter,
 		logger:  logger,
 	}
 	p.responses.logger = logger
@@ -184,7 +184,7 @@ func (p *reqPipe) getBlock() cipher.Block {
 // This is concurrent safe.
 type responseMap struct {
 	m      sync.Map
-	logger Logger
+	logger Logger // must be non-nil
 }
 
 func (m *responseMap) waitFor(t responseTag) <-chan []byte {
