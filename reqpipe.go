@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // A closeLimiter is a Limiter that has a Close method to unblock all waiters.
@@ -77,6 +78,8 @@ func newReqPipe(conn net.Conn, limiter closeLimiter, logger Logger) *reqPipe {
 //  context.DeadlineExceeded
 //  net.Error
 func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (response, error) {
+	ctx, cf := context.WithTimeout(ctx, 5*time.Second)
+	defer cf()
 	p.logger.Printf("Starting request cmd %s", cmd)
 	t := p.tagCounter.next()
 	args.Set("tag", string(t))
