@@ -188,16 +188,7 @@ func (p *reqPipe) handleResponseData(data []byte) {
 			return
 		}
 	}
-	parts := bytes.SplitN(data, []byte(" "), 2)
-	tag := responseTag(parts[0])
-	switch len(parts) {
-	case 1:
-		p.responses.deliver(tag, nil)
-	case 2:
-		p.responses.deliver(tag, parts[1])
-	default:
-		panic(fmt.Sprintf("unexpected length %d", len(parts)))
-	}
+	p.responses.deliver(splitTag(data))
 }
 
 func (p *reqPipe) getBlock() cipher.Block {
@@ -261,6 +252,20 @@ func (c *tagCounter) next() responseTag {
 	defer c.mu.Unlock()
 	c.c++
 	return responseTag(fmt.Sprintf("%x", c.c))
+}
+
+// splitTag splits the tag off a UDP response body.
+func splitTag(b []byte) (responseTag, []byte) {
+	parts := bytes.SplitN(b, []byte(" "), 2)
+	tag := responseTag(parts[0])
+	switch len(parts) {
+	case 1:
+		return tag, nil
+	case 2:
+		return tag, parts[1]
+	default:
+		panic(fmt.Sprintf("unexpected length %d", len(parts)))
+	}
 }
 
 type response struct {
