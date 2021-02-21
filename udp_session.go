@@ -81,6 +81,7 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 		p:      newReqPipe(conn, newUDPLimiter(), logger),
 		logger: logger,
 	}
+	// XXXXXXXXXXXX Close reqpipe
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
 			return nil, fmt.Errorf("start UDP session: %s", err)
