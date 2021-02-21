@@ -16,6 +16,7 @@ package anidb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -30,8 +31,8 @@ const protoVer = "3"
 
 const defaultServer = "api.anidb.net:9000"
 
-// An UDPConfig is used for configuring an AniDB UDP client.
-type UDPConfig struct {
+// An sessionConfig is used for starting an AniDB UDP session.
+type sessionConfig struct {
 	// If empty, use default server.
 	Server        string
 	UserName      string
@@ -60,8 +61,9 @@ type udpSession struct {
 
 // startUDPSession starts a UDP session.
 // context is used for initializing the session only.
-// You must close the session after use.
-func startUDPSession(ctx context.Context, c *UDPConfig) (_ *udpSession, err error) {
+// reqPipes must only be used with a single session at a time.
+// You must close the session after use. XXXXXXXXXXXXXXXXXX
+func startUDPSession(ctx context.Context, c *sessionConfig) (_ *udpSession, err error) {
 	srv := c.Server
 	if srv == "" {
 		srv = defaultServer
@@ -79,10 +81,9 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (_ *udpSession, err erro
 		logger: logger,
 	}
 	defer func() {
-		if err == nil {
-			return
+		if err != nil {
+			s.p.close()
 		}
-		s.close()
 	}()
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
@@ -107,7 +108,7 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (_ *udpSession, err erro
 func (s *udpSession) close() {
 	ctx, cf := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cf()
-	_ = s.logout(ctx)
+	_ = s.logout(ctx) // XXXXXXXXXX shouldn't always logout?
 	s.p.close()
 }
 
@@ -117,6 +118,26 @@ func (s *udpSession) sessionValues() url.Values {
 	v.Set("user", s.sessionKey)
 	s.sessionKeyMu.Unlock()
 	return v
+}
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
+// request performs a UDP request.  Handles retries.
+// args is modified with a new tag.
+// Concurrency safe.
+func (p *reqPipe) tmpRequest(ctx context.Context, cmd string, args url.Values) (response, error) {
+	p.logger.Printf("Starting request cmd %s", cmd)
+	for ctx.Err() == nil {
+		resp, err := p.request(ctx, cmd, args)
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				// XXXXXXXX retry
+			}
+			return response{}, fmt.Errorf("reqpipe request: %s", err)
+		}
+		// XXXXXXXX check for retriable returnCode
+		return resp, nil
+	}
+	return response{}, fmt.Errorf("reqpipe request: %w", ctx.Err())
 }
 
 // A Logger can be used for logging.

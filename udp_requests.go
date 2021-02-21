@@ -52,7 +52,7 @@ func (s *udpSession) encrypt(ctx context.Context, user string, key string) error
 
 // auth RPC call.
 // Concurrent safe.
-func (s *udpSession) auth(ctx context.Context, cfg *UDPConfig) error {
+func (s *udpSession) auth(ctx context.Context, cfg *sessionConfig) error {
 	v := url.Values{}
 	v.Set("user", cfg.UserName)
 	v.Set("pass", cfg.UserPassword)
@@ -67,7 +67,7 @@ func (s *udpSession) auth(ctx context.Context, cfg *UDPConfig) error {
 	}
 	switch resp.code {
 	case 201:
-		s.logger.Printf("new anidb UDP API version available")
+		s.logger.Printf("New anidb UDP API version available")
 		// TODO Expose update available info to library clients
 		fallthrough
 	case 200:
