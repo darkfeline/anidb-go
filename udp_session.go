@@ -47,9 +47,6 @@ type UDPConfig struct {
 // A udpSession represents an authenticated UDP session.
 // A udpSession's methods are concurrency safe.
 type udpSession struct {
-	// Concurrency safe
-	wg sync.WaitGroup
-
 	// Set on init
 	p      *reqPipe
 	logger Logger
@@ -108,7 +105,6 @@ func (s *udpSession) Close() {
 	defer cf()
 	_ = s.logout(ctx)
 	s.p.close()
-	s.wg.Wait()
 }
 
 func (s *udpSession) sessionValues() url.Values {
