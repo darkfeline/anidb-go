@@ -47,7 +47,7 @@ type reqPipe struct {
 	tagCounter tagCounter
 
 	// Set on init
-	conn    *net.UDPConn
+	conn    net.Conn
 	limiter closeLimiter
 	logger  Logger
 
@@ -56,7 +56,7 @@ type reqPipe struct {
 	blockMu sync.Mutex
 }
 
-func newReqPipe(conn *net.UDPConn, l closeLimiter, logger Logger) *reqPipe {
+func newReqPipe(conn net.Conn, l closeLimiter, logger Logger) *reqPipe {
 	if logger == nil {
 		logger = nullLogger{}
 	}
