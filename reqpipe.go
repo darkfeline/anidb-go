@@ -161,7 +161,7 @@ func (p *reqPipe) handleResponseData(data []byte) {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
-			p.logger.Printf("error: %s", err)
+			p.logger.Printf("Error handling response: %s", err)
 			return
 		}
 	}
@@ -169,7 +169,7 @@ func (p *reqPipe) handleResponseData(data []byte) {
 		var err error
 		data, err = decompress(data[2:])
 		if err != nil {
-			p.logger.Printf("error: %s", err)
+			p.logger.Printf("Error handling response: %s", err)
 			return
 		}
 	}
