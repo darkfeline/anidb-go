@@ -129,6 +129,7 @@ func (p *reqPipe) requestOnce(ctx context.Context, cmd string, args url.Values) 
 	c := p.responses.waitFor(t)
 	defer p.responses.cancel(t)
 	p.logger.Printf("Sending cmd %s", cmd)
+	// BUG(darkfeline): Network writes aren't governed by context deadlines.
 	if _, err := p.conn.Write(req); err != nil {
 		return response{}, err
 	}
