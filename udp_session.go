@@ -61,7 +61,7 @@ type udpSession struct {
 // startUDPSession starts a UDP session.
 // context is used for initializing the session only.
 // You must close the session after use.
-func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
+func startUDPSession(ctx context.Context, c *UDPConfig) (_ *udpSession, err error) {
 	srv := c.Server
 	if srv == "" {
 		srv = defaultServer
@@ -78,7 +78,12 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 		p:      newReqPipe(conn, newUDPLimiter(), logger),
 		logger: logger,
 	}
-	// XXXXXXXXXXXX Close reqpipe
+	defer func() {
+		if err == nil {
+			return
+		}
+		s.close()
+	}()
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
 			return nil, fmt.Errorf("start UDP session: %s", err)
@@ -98,9 +103,8 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	return s, nil
 }
 
-// Close immediately closes the session.
-// Waits for any goroutines to exit.
-func (s *udpSession) Close() {
+// close immediately closes the session.
+func (s *udpSession) close() {
 	ctx, cf := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cf()
 	_ = s.logout(ctx)
