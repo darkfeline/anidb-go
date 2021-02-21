@@ -27,7 +27,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // A closeLimiter is a Limiter that has a Close method to unblock all waiters.
@@ -70,23 +69,42 @@ func newReqPipe(conn net.Conn, l closeLimiter, logger Logger) *reqPipe {
 	return p
 }
 
-// request performs a UDP request.  Handles retries.
+// request performs a UDP request.
 // args is modified with a new tag.
+// No retries.
 // Concurrency safe.
+// Returned error may be errors.Is:
+//  context.DeadlineExceeded
+//  net.Error
 func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (response, error) {
 	p.logger.Printf("Starting request cmd %s", cmd)
-	for ctx.Err() == nil {
-		resp, err := p.requestOnce(ctx, cmd, args)
+	t := p.tagCounter.next()
+	args.Set("tag", string(t))
+	req := []byte(cmd + " " + args.Encode())
+	if b := p.getBlock(); b != nil {
+		req = encrypt(b, req)
+	}
+	p.logger.Printf("Waiting to send cmd %s", cmd)
+	if err := p.limiter.Wait(ctx); err != nil {
+		return response{}, fmt.Errorf("reqpipe request: %w", err)
+	}
+	c := p.responses.waitFor(t)
+	defer p.responses.cancel(t)
+	p.logger.Printf("Sending cmd %s", cmd)
+	// BUG(darkfeline): Network writes aren't governed by context deadlines.
+	if _, err := p.conn.Write(req); err != nil {
+		return response{}, fmt.Errorf("reqpipe request: %w", err)
+	}
+	select {
+	case <-ctx.Done():
+		return response{}, ctx.Err()
+	case d := <-c:
+		resp, err := parseResponse(d)
 		if err != nil {
-			if errors.Is(err, context.DeadlineExceeded) {
-				// XXXXXXXX retry
-			}
 			return response{}, fmt.Errorf("reqpipe request: %s", err)
 		}
-		// XXXXXXXX check for retriable returnCode
 		return resp, nil
 	}
-	return response{}, fmt.Errorf("reqpipe request: %w", ctx.Err())
 }
 
 // setBlock sets the cipher block to use for future requests.
@@ -106,43 +124,6 @@ func (p *reqPipe) close() {
 	p.limiter.close()
 	p.responses.close()
 	p.wg.Wait()
-}
-
-// requestOnce sends a single UDP request packet.  No retries.
-// args is modified with a new tag.
-// Returned error may be errors.Is:
-//  context.DeadlineExceeded
-//  returnCode
-func (p *reqPipe) requestOnce(ctx context.Context, cmd string, args url.Values) (response, error) {
-	ctx, cf := context.WithTimeout(ctx, 5*time.Second)
-	defer cf()
-	t := p.tagCounter.next()
-	args.Set("tag", string(t))
-	req := []byte(cmd + " " + args.Encode())
-	if b := p.getBlock(); b != nil {
-		req = encrypt(b, req)
-	}
-	p.logger.Printf("Waiting to send cmd %s", cmd)
-	if err := p.limiter.Wait(ctx); err != nil {
-		return response{}, err
-	}
-	c := p.responses.waitFor(t)
-	defer p.responses.cancel(t)
-	p.logger.Printf("Sending cmd %s", cmd)
-	// BUG(darkfeline): Network writes aren't governed by context deadlines.
-	if _, err := p.conn.Write(req); err != nil {
-		return response{}, err
-	}
-	select {
-	case <-ctx.Done():
-		return response{}, ctx.Err()
-	case d := <-c:
-		resp, err := parseResponse(d)
-		if err != nil {
-			return response{}, err
-		}
-		return resp, nil
-	}
 }
 
 // handleResponses handles incoming responses.
