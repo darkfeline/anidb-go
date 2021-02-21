@@ -67,7 +67,6 @@ func TestReqPipe(t *testing.T) {
 	t.Run("test server", func(t *testing.T) {
 		t.Parallel()
 		data := make([]byte, 200)
-		tr := regexp.MustCompile(`tag=([0-9]+)`)
 		var tag1, tag2 responseTag
 		for i := 0; i < 2; i++ {
 			t.Logf("Reading packet")
@@ -76,11 +75,11 @@ func TestReqPipe(t *testing.T) {
 				t.Fatal(err)
 			}
 			t.Logf("Done reading packet")
-			m := tr.FindSubmatch(data[:n])
+			tag := parseRequestTag(data[:n])
 			if strings.Contains(string(data[:n]), "nat=1") {
-				tag1 = responseTag(m[1])
+				tag1 = tag
 			} else {
-				tag2 = responseTag(m[1])
+				tag2 = tag
 			}
 		}
 		addr := c.LocalAddr()
@@ -215,6 +214,13 @@ func TestEncryptDecrypt(t *testing.T) {
 			}
 		})
 	}
+}
+
+var tagRegexp = regexp.MustCompile(`tag=([0-9]+)`)
+
+func parseRequestTag(b []byte) responseTag {
+	m := tagRegexp.FindSubmatch(b)
+	return responseTag(m[1])
 }
 
 func newUDPPipe(t *testing.T, timeout time.Duration) (net.PacketConn, net.Conn) {
