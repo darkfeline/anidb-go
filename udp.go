@@ -85,6 +85,9 @@ func StartUDP(ctx context.Context, c *UDPConfig) (*Session, error) {
 		p:      newReqPipe(conn, newUDPLimiter(), c.Logger),
 		logger: c.Logger,
 	}
+	if s.logger == nil {
+		s.logger = nullLogger{}
+	}
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
 			return nil, fmt.Errorf("start anidb UDP: %s", err)
@@ -112,14 +115,6 @@ func (s *Session) Close() {
 	_ = s.logout(ctx)
 	s.p.close()
 	s.wg.Wait()
-}
-
-// concurrent safe
-func (s *Session) log(format string, v ...interface{}) {
-	if s.logger == nil {
-		return
-	}
-	s.logger.Printf(format, v...)
 }
 
 func (s *Session) sessionValues() url.Values {

@@ -67,7 +67,7 @@ func (s *Session) auth(ctx context.Context, cfg *UDPConfig) error {
 	}
 	switch resp.code {
 	case 201:
-		s.log("new anidb UDP API version available")
+		s.logger.Printf("new anidb UDP API version available")
 		// TODO Expose update available info to library clients
 		fallthrough
 	case 200:

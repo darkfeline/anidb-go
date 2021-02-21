@@ -57,6 +57,9 @@ type reqPipe struct {
 }
 
 func newReqPipe(conn *net.UDPConn, l closeLimiter, logger Logger) *reqPipe {
+	if logger == nil {
+		logger = nullLogger{}
+	}
 	p := &reqPipe{
 		conn:    conn,
 		limiter: l,
@@ -71,6 +74,7 @@ func newReqPipe(conn *net.UDPConn, l closeLimiter, logger Logger) *reqPipe {
 // args is modified with a new tag.
 // Concurrency safe.
 func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (response, error) {
+	p.logger.Printf("calling request cmd %s", cmd)
 	for ctx.Err() == nil {
 		resp, err := p.requestOnce(ctx, cmd, args)
 		if err != nil {
@@ -118,11 +122,13 @@ func (p *reqPipe) requestOnce(ctx context.Context, cmd string, args url.Values) 
 	if b := p.getBlock(); b != nil {
 		req = encrypt(b, req)
 	}
+	p.logger.Printf("Waiting to send cmd %s", cmd)
 	if err := p.limiter.Wait(ctx); err != nil {
 		return response{}, err
 	}
 	c := p.responses.waitFor(t)
 	defer p.responses.cancel(t)
+	p.logger.Printf("Sending cmd %s", cmd)
 	if _, err := p.conn.Write(req); err != nil {
 		return response{}, err
 	}
@@ -158,7 +164,7 @@ func (p *reqPipe) handleResponses() {
 			if errors.As(readErr, &err) && !err.Temporary() {
 				return
 			}
-			p.log("error reading from UDP conn: %s", readErr)
+			p.logger.Printf("error reading from UDP conn: %s", readErr)
 		}
 	}
 }
@@ -170,7 +176,7 @@ func (p *reqPipe) handleResponseData(data []byte) {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
-			p.log("error: %s", err)
+			p.logger.Printf("error: %s", err)
 			return
 		}
 	}
@@ -178,7 +184,7 @@ func (p *reqPipe) handleResponseData(data []byte) {
 		var err error
 		data, err = decompress(data[2:])
 		if err != nil {
-			p.log("error: %s", err)
+			p.logger.Printf("error: %s", err)
 			return
 		}
 	}
@@ -198,13 +204,6 @@ func (p *reqPipe) getBlock() cipher.Block {
 	p.blockMu.Lock()
 	defer p.blockMu.Unlock()
 	return p.block
-}
-
-// concurrent safe
-func (p *reqPipe) log(format string, v ...interface{}) {
-	if p.logger != nil {
-		p.logger.Printf(format, v...)
-	}
 }
 
 // A responseMap tracks pending UDP responses by tag, so they can be
@@ -227,7 +226,7 @@ func (m *responseMap) waitFor(t responseTag) <-chan []byte {
 func (m *responseMap) deliver(t responseTag, b []byte) {
 	v, loaded := m.m.LoadAndDelete(t)
 	if !loaded {
-		m.log("Unknown tag %q for response", t)
+		m.logger.Printf("Unknown tag %q for response", t)
 		return
 	}
 	c := v.(chan []byte)
@@ -237,12 +236,6 @@ func (m *responseMap) deliver(t responseTag, b []byte) {
 
 func (m *responseMap) cancel(t responseTag) {
 	m.m.Delete(t)
-}
-
-func (m *responseMap) log(format string, v ...interface{}) {
-	if m.logger != nil {
-		m.logger.Printf(format, v...)
-	}
 }
 
 // close delivers empty bytes to all pending responses.
@@ -392,3 +385,7 @@ func unescapeField(s string) string {
 	s = strings.ReplaceAll(s, "/", "|")
 	return s
 }
+
+type nullLogger struct{}
+
+func (nullLogger) Printf(string, ...interface{}) {}
