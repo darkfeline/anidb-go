@@ -79,7 +79,8 @@ func (s *udpSession) auth(ctx context.Context, cfg *UDPConfig) error {
 		s.sessionKey = parts[0]
 		s.sessionKeyMu.Unlock()
 		// TODO Make address comparison more reliable
-		if s.p.conn.LocalAddr().String() != parts[1] {
+		if our := s.p.conn.LocalAddr().String(); our != parts[1] {
+			s.logger.Printf("Detected NAT (us: %q, them: %q)", our, parts[1])
 			s.isNATMu.Lock()
 			s.isNAT = true
 			s.isNATMu.Unlock()
