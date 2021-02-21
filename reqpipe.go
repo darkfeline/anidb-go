@@ -89,14 +89,14 @@ func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (res
 	}
 	p.logger.Printf("Waiting to send cmd %s", cmd)
 	if err := p.limiter.Wait(ctx); err != nil {
-		return response{}, fmt.Errorf("reqpipe request: %w", err)
+		return response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
 	}
 	c := p.responses.waitFor(t)
 	defer p.responses.cancel(t)
 	p.logger.Printf("Sending cmd %s", cmd)
 	// BUG(darkfeline): Network writes aren't governed by context deadlines.
 	if _, err := p.conn.Write(req); err != nil {
-		return response{}, fmt.Errorf("reqpipe request: %w", err)
+		return response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
 	}
 	select {
 	case <-ctx.Done():
@@ -104,7 +104,7 @@ func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (res
 	case d := <-c:
 		resp, err := parseResponse(d)
 		if err != nil {
-			return response{}, fmt.Errorf("reqpipe request: %s", err)
+			return response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
 		}
 		return resp, nil
 	}
