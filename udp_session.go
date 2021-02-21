@@ -71,7 +71,7 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	}
 	conn, err := net.Dial("udp", srv)
 	if err != nil {
-		return nil, fmt.Errorf("start anidb UDP: %s", err)
+		return nil, fmt.Errorf("start UDP session: %s", err)
 	}
 	s := &udpSession{
 		p:      newReqPipe(conn, newUDPLimiter(), c.Logger),
@@ -82,11 +82,11 @@ func startUDPSession(ctx context.Context, c *UDPConfig) (*udpSession, error) {
 	}
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
-			return nil, fmt.Errorf("start anidb UDP: %s", err)
+			return nil, fmt.Errorf("start UDP session: %s", err)
 		}
 	}
 	if err := s.auth(ctx, c); err != nil {
-		return nil, fmt.Errorf("start anidb UDP: %s", err)
+		return nil, fmt.Errorf("start UDP session: %s", err)
 	}
 	if s.isNAT {
 		// XXXXXXXXXXXX
