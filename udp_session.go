@@ -30,7 +30,7 @@ const protoVer = "3"
 
 const defaultServer = "api.anidb.net:9000"
 
-// An UDPConfig is used for starting UDP sessions.
+// An UDPConfig is used for configuring an AniDB UDP client.
 type UDPConfig struct {
 	// If nil, use default server.
 	Server *net.UDPAddr
