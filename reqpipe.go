@@ -56,6 +56,10 @@ type reqPipe struct {
 	blockMu sync.Mutex
 }
 
+// newReqPipe makes a new reqPipe.
+// You must call close after use.
+// The underlying conn will be closed internally and should not
+// be closed directly by the caller.
 func newReqPipe(conn net.Conn, limiter closeLimiter, logger Logger) *reqPipe {
 	if logger == nil {
 		logger = nullLogger{}
@@ -124,6 +128,7 @@ func (p *reqPipe) setBlock(b cipher.Block) {
 }
 
 // close immediately closes the pipe.
+// Also closes the underlying connection.
 // Waits for any goroutines to exit.
 // Concurrency safe.
 func (p *reqPipe) close() {
