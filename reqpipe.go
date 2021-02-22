@@ -40,6 +40,9 @@ type closeLimiter interface {
 }
 
 // A reqPipe serializes and demuxes AniDB UDP requests.
+// Handles flood protection.
+// Handles decompression and decryption, as they are necessary to
+// parse response tags.
 type reqPipe struct {
 	// Concurrency safe
 	wg         sync.WaitGroup
