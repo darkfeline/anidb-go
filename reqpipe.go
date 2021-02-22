@@ -149,7 +149,7 @@ func (p *reqPipe) handleResponses() {
 			p.handleResponseData(buf[:n])
 		}
 		if readErr != nil {
-			if readErr == io.EOF {
+			if errors.Is(readErr, net.ErrClosed) {
 				return
 			}
 			var err net.Error
