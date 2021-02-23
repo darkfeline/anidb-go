@@ -176,7 +176,7 @@ func (m *Mux) handleResponses() {
 			if errors.As(readErr, &err) && !err.Temporary() {
 				return
 			}
-			m.logger.Printf("error reading from UDP conn: %s", readErr)
+			m.logger.Printf("Error reading from UDP conn: %s", readErr)
 		}
 	}
 }
