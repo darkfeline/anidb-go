@@ -22,14 +22,14 @@ import (
 	"time"
 )
 
-type udpRequester interface {
+type requester interface {
 	Request(context.Context, string, url.Values) (Response, error)
 }
 
 var _ udpRequester = &Mux{}
 
 type keepAlive struct {
-	r      udpRequester
+	r      requester
 	logger Logger // Must be non-nil
 
 	wg      sync.WaitGroup
@@ -45,7 +45,7 @@ type keepAlive struct {
 // newKeepAlive starts a keepalive goroutine to keep the AniDB UDP
 // connection alive behind NAT.
 // You must call start to actually start the keepalive.
-func newKeepAlive(r udpRequester, l Logger) *keepAlive {
+func newKeepAlive(r requester, l Logger) *keepAlive {
 	k := &keepAlive{
 		r:      r,
 		logger: l,
