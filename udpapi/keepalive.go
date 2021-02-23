@@ -26,7 +26,7 @@ type requester interface {
 	Request(context.Context, string, url.Values) (Response, error)
 }
 
-var _ udpRequester = &Mux{}
+var _ requester = &Mux{}
 
 type keepAlive struct {
 	r      requester
@@ -196,7 +196,7 @@ func (s *inactiveSleeper) afterActive(d time.Duration) time.Time {
 	return s.lastActive.Add(d)
 }
 
-func keepAlivePing(ctx context.Context, r udpRequester) (port string, _ error) {
+func keepAlivePing(ctx context.Context, r requester) (port string, _ error) {
 	ctx, cf := context.WithTimeout(ctx, 2*time.Second)
 	defer cf()
 	resp, err := r.Request(ctx, "PING", url.Values{"nat": []string{"1"}})
