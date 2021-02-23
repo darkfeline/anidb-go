@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package anidb
+package udpapi
 
 import (
 	"context"
@@ -27,26 +27,27 @@ import (
 // encrypt RPC call.
 // Concurrent safe.
 func (s *udpSession) encrypt(ctx context.Context, user string, key string) error {
+	////////////////// handle existing session
 	v := url.Values{}
 	v.Set("user", user)
 	v.Set("type", "1")
-	resp, err := s.p.request(ctx, "ENCRYPT", v)
+	resp, err := s.p.Request(ctx, "ENCRYPT", v)
 	if err != nil {
 		return fmt.Errorf("encrypt: %s", err)
 	}
-	switch resp.code {
+	switch resp.Code {
 	case 209:
-		parts := strings.SplitN(resp.header, " ", 2)
+		parts := strings.SplitN(resp.Header, " ", 2)
 		salt := parts[0]
 		sum := md5.Sum([]byte(key + salt))
 		b, err := aes.NewCipher(sum[:])
 		if err != nil {
 			return fmt.Errorf("encrypt: %s", err)
 		}
-		s.p.setBlock(b)
+		s.p.SetBlock(b)
 		return nil
 	default:
-		return fmt.Errorf("encrypt: bad code %d %q", resp.code, resp.header)
+		return fmt.Errorf("encrypt: bad code %d %q", resp.Code, resp.Header)
 	}
 }
 
@@ -59,21 +60,21 @@ func (s *udpSession) auth(ctx context.Context, cfg *sessionConfig) error {
 	v.Set("protover", protoVer)
 	v.Set("client", cfg.ClientName)
 	v.Set("clientver", strconv.Itoa(int(cfg.ClientVersion)))
-	v.Set("nat", "1")
+	v.Set("nat", "1") /////////// delete
 	v.Set("comp", "1")
-	resp, err := s.p.request(ctx, "AUTH", v)
+	resp, err := s.p.Request(ctx, "AUTH", v)
 	if err != nil {
 		return fmt.Errorf("auth request: %s", err)
 	}
-	switch resp.code {
+	switch resp.Code {
 	case 201:
 		s.logger.Printf("New anidb UDP API version available")
 		// TODO Expose update available info to library clients
 		fallthrough
 	case 200:
-		parts := strings.SplitN(resp.header, " ", 3)
+		parts := strings.SplitN(resp.Header, " ", 3)
 		if len(parts) < 3 {
-			return fmt.Errorf("auth request: invalid response header %q", resp.header)
+			return fmt.Errorf("auth request: invalid response header %q", resp.Header)
 		}
 		s.sessionKeyMu.Lock()
 		s.sessionKey = parts[0]
@@ -87,7 +88,7 @@ func (s *udpSession) auth(ctx context.Context, cfg *sessionConfig) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("auth request: bad code %d %s", resp.code, resp.header)
+		return fmt.Errorf("auth request: bad code %d %s", resp.Code, resp.Header)
 	}
 }
 
@@ -95,17 +96,17 @@ func (s *udpSession) auth(ctx context.Context, cfg *sessionConfig) error {
 // Concurrent safe.
 func (s *udpSession) logout(ctx context.Context) error {
 	v := s.sessionValues()
-	resp, err := s.p.request(ctx, "LOGOUT", v)
+	resp, err := s.p.Request(ctx, "LOGOUT", v)
 	if err != nil {
 		return fmt.Errorf("logout request: %s", err)
 	}
 	s.sessionKeyMu.Lock()
 	s.sessionKey = ""
 	s.sessionKeyMu.Unlock()
-	switch resp.code {
+	switch resp.Code {
 	case 203:
 		return nil
 	default:
-		return fmt.Errorf("logout request: bad code %d %s", resp.code, resp.header)
+		return fmt.Errorf("logout request: bad code %d %s", resp.Code, resp.Header)
 	}
 }

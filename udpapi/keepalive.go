@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package anidb
+package udpapi
 
 import (
 	"context"
@@ -23,10 +23,10 @@ import (
 )
 
 type udpRequester interface {
-	request(context.Context, string, url.Values) (response, error)
+	Request(context.Context, string, url.Values) (Response, error)
 }
 
-var _ udpRequester = &reqPipe{}
+var _ udpRequester = &Mux{}
 
 type keepAlive struct {
 	r      udpRequester
@@ -199,13 +199,13 @@ func (s *inactiveSleeper) afterActive(d time.Duration) time.Time {
 func keepAlivePing(ctx context.Context, r udpRequester) (port string, _ error) {
 	ctx, cf := context.WithTimeout(ctx, 2*time.Second)
 	defer cf()
-	resp, err := r.request(ctx, "PING", url.Values{"nat": []string{"1"}})
+	resp, err := r.Request(ctx, "PING", url.Values{"nat": []string{"1"}})
 	if err != nil {
 		return "", err
 	}
 	// TODO check for bad returnCode, retries
-	if len(resp.rows) < 1 || len(resp.rows[0]) < 1 {
+	if len(resp.Rows) < 1 || len(resp.Rows[0]) < 1 {
 		return "", fmt.Errorf("ping: unexpected response rows")
 	}
-	return resp.rows[0][0], nil
+	return resp.Rows[0][0], nil
 }

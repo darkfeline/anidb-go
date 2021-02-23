@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package anidb
+// Package udpapi provides Go bindings for the AniDB UDP API.
+//
+// Documentation for the API can be found at
+// https://wiki.anidb.net/UDP_API_Definition.
+package udpapi
 
 import (
 	"bytes"
@@ -30,126 +34,139 @@ import (
 	"time"
 )
 
-// A closeLimiter is a Limiter that has a Close method to unblock all waiters.
-type closeLimiter interface {
-	Limiter
-	// close unblocks all waiters.
-	// This method must be safe to call concurrently.
-	// All Wait calls afterward must also be unblocked.
-	close()
-}
-
-// A reqPipe serializes and demuxes AniDB UDP requests.
-// Handles flood protection.
-// Handles decompression and decryption, as they are necessary to
-// parse response tags.
-type reqPipe struct {
+// A Mux multiplexes AniDB UDP API requests on a single connection.
+//
+// Multiple goroutines may invoke methods on a Mux simultaneously.
+type Mux struct {
 	// Concurrency safe
 	wg         sync.WaitGroup
 	responses  responseMap
 	tagCounter tagCounter
 
 	// Set on init
-	conn    net.Conn
-	limiter closeLimiter
-	logger  Logger
+	conn   net.Conn
+	logger Logger
 
 	// Mutex protected
 	block   cipher.Block
 	blockMu sync.Mutex
 }
 
-// newReqPipe makes a new reqPipe.
-// You must call close after use.
+// NewMux makes a new Mux.
+// You must call Close after use.
 // The underlying conn will be closed internally and should not
 // be closed directly by the caller.
-func newReqPipe(conn net.Conn, limiter closeLimiter, logger Logger) *reqPipe {
-	if logger == nil {
-		logger = nullLogger{}
+func NewMux(conn net.Conn, o ...MuxOption) *Mux {
+	m := &Mux{
+		conn:   conn,
+		logger: nullLogger{},
 	}
-	p := &reqPipe{
-		conn:    conn,
-		limiter: limiter,
-		logger:  logger,
+	for _, o := range o {
+		o.apply(m)
 	}
-	p.responses.logger = logger
-	p.wg.Add(1)
+	m.wg.Add(1)
 	go func() {
-		defer p.wg.Done()
-		p.handleResponses()
+		defer m.wg.Done()
+		m.handleResponses()
 	}()
-	return p
+	return m
 }
 
-// request performs a UDP request.
-// args is modified with a new tag.
-// No retries.
-// Concurrency safe.
-// Returned error may be errors.Is:
+// A MuxOption is passed to NewMux for configuration.
+type MuxOption interface {
+	apply(*Mux)
+}
+
+// A Logger can be used for logging.
+// A Logger must be safe to use concurrently.
+type Logger interface {
+	Printf(string, ...interface{})
+}
+
+// UseLogger returns a MuxOption for setting a Logger.
+func UseLogger(l Logger) MuxOption {
+	return loggerOpt{l}
+}
+
+type loggerOpt struct {
+	logger Logger
+}
+
+func (loggerOpt) muxOption() {}
+func (o loggerOpt) apply(m *Mux) {
+	m.logger = o.logger
+}
+
+// Request performs an AniDB UDP API request.
+// args is modified by setting a new tag.
+// This method does not handle retries or rate limiting.
+//
+// This method handles decompression and decryption, as they are
+// necessary to parse response tags.
+//
+// See the AniDB UDP API documentation for more information.
+//
+// The returned error may be errors.Is with these errors:
 //  context.DeadlineExceeded
 //  net.Error
-func (p *reqPipe) request(ctx context.Context, cmd string, args url.Values) (response, error) {
+func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Response, error) {
 	ctx, cf := context.WithTimeout(ctx, 5*time.Second)
 	defer cf()
-	p.logger.Printf("Starting request cmd %s", cmd)
-	t := p.tagCounter.next()
+	m.logger.Printf("Starting request cmd %s", cmd)
+	t := m.tagCounter.next()
 	args.Set("tag", string(t))
 	req := []byte(cmd + " " + args.Encode())
-	if b := p.getBlock(); b != nil {
+	if b := m.getBlock(); b != nil {
 		req = encrypt(b, req)
 	}
-	p.logger.Printf("Waiting to send cmd %s", cmd)
-	if err := p.limiter.Wait(ctx); err != nil {
-		return response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
-	}
-	c := p.responses.waitFor(t)
-	defer p.responses.cancel(t)
-	p.logger.Printf("Sending cmd %s", cmd)
+	c := m.responses.waitFor(t)
+	defer m.responses.cancel(t)
+	m.logger.Printf("Sending cmd %s", cmd)
 	// BUG(darkfeline): Network writes aren't governed by context deadlines.
-	if _, err := p.conn.Write(req); err != nil {
-		return response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
+	if _, err := m.conn.Write(req); err != nil {
+		return Response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
 	}
 	select {
 	case <-ctx.Done():
-		return response{}, ctx.Err()
+		return Response{}, ctx.Err()
 	case d := <-c:
 		resp, err := parseResponse(d)
 		if err != nil {
-			return response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
+			return Response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
 		}
 		return resp, nil
 	}
 }
 
-// setBlock sets the cipher block to use for future requests.
-// Set to nil to unset.
-// Concurrency safe.
-func (p *reqPipe) setBlock(b cipher.Block) {
-	p.blockMu.Lock()
-	p.block = b
-	p.blockMu.Unlock()
+// SetBlock sets the cipher block to use for future requests and responses.
+// Set to nil to disable encryption and decryption.
+//
+// See the AniDB UDP API documentation for more information.
+func (m *Mux) SetBlock(b cipher.Block) {
+	m.blockMu.Lock()
+	m.block = b
+	m.blockMu.Unlock()
 }
 
-// close immediately closes the pipe.
-// Also closes the underlying connection.
-// Waits for any goroutines to exit.
-// Concurrency safe.
-func (p *reqPipe) close() {
-	_ = p.conn.Close()
-	p.limiter.close()
-	p.responses.close()
-	p.wg.Wait()
+// Close immediately closes the Mux.
+// The underlying connection is closed.
+// No new requests will be accepted (as the connection is closed).
+// Any Request calls waiting for responses will be unblocked.
+func (m *Mux) Close() {
+	_ = m.conn.Close()
+	m.responses.close()
+	m.wg.Wait()
 }
 
 // handleResponses handles incoming responses.
 // Should be a called as a goroutine.
 // Will exit when connection is closed.
-func (p *reqPipe) handleResponses() {
+func (m *Mux) handleResponses() {
 	buf := make([]byte, 1400) // Max UDP size
 	for {
-		n, readErr := p.conn.Read(buf)
+		n, readErr := m.conn.Read(buf)
 		if n > 0 {
-			p.handleResponseData(buf[:n])
+			m.handleResponseData(buf[:n])
 		}
 		if readErr != nil {
 			if errors.Is(readErr, net.ErrClosed) {
@@ -159,19 +176,19 @@ func (p *reqPipe) handleResponses() {
 			if errors.As(readErr, &err) && !err.Temporary() {
 				return
 			}
-			p.logger.Printf("error reading from UDP conn: %s", readErr)
+			m.logger.Printf("error reading from UDP conn: %s", readErr)
 		}
 	}
 }
 
 // handleResponseData handles one incoming response packet.
 // Does decryption and decompression, as it is needed to match the response tag.
-func (p *reqPipe) handleResponseData(data []byte) {
-	if b := p.getBlock(); b != nil {
+func (m *Mux) handleResponseData(data []byte) {
+	if b := m.getBlock(); b != nil {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
-			p.logger.Printf("Error handling response: %s", err)
+			m.logger.Printf("Error handling response: %s", err)
 			return
 		}
 	}
@@ -179,17 +196,17 @@ func (p *reqPipe) handleResponseData(data []byte) {
 		var err error
 		data, err = decompress(data[2:])
 		if err != nil {
-			p.logger.Printf("Error handling response: %s", err)
+			m.logger.Printf("Error handling response: %s", err)
 			return
 		}
 	}
-	p.responses.deliver(splitTag(data))
+	m.responses.deliver(splitTag(data))
 }
 
-func (p *reqPipe) getBlock() cipher.Block {
-	p.blockMu.Lock()
-	defer p.blockMu.Unlock()
-	return p.block
+func (m *Mux) getBlock() cipher.Block {
+	m.blockMu.Lock()
+	defer m.blockMu.Unlock()
+	return m.block
 }
 
 // A responseMap tracks pending UDP responses by tag, so they can be
@@ -263,25 +280,26 @@ func splitTag(b []byte) (responseTag, []byte) {
 	}
 }
 
-type response struct {
-	code   returnCode
-	header string
-	rows   [][]string
+// A Response is an AniDB UDP API response.
+type Response struct {
+	Code   ReturnCode
+	Header string
+	Rows   [][]string
 }
 
 // parseResponse parses UDP responses, without the tag.
-func parseResponse(b []byte) (response, error) {
-	p := string(b)
-	lines := strings.Split(p, "\n")
+func parseResponse(b []byte) (Response, error) {
+	m := string(b)
+	lines := strings.Split(m, "\n")
 	parts := strings.SplitN(lines[0], " ", 2)
-	r := response{}
+	r := Response{}
 	code, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return r, fmt.Errorf("parse response: %s", err)
 	}
-	r.code = returnCode(code)
+	r.Code = ReturnCode(code)
 	if len(parts) > 1 {
-		r.header = parts[1]
+		r.Header = parts[1]
 	}
 	for _, line := range lines[1:] {
 		if line == "" {
@@ -291,45 +309,45 @@ func parseResponse(b []byte) (response, error) {
 		for i, f := range row {
 			row[i] = unescapeField(f)
 		}
-		r.rows = append(r.rows, row)
+		r.Rows = append(r.Rows, row)
 	}
 	return r, nil
 }
 
-// UDP API return code.
-// Note that returnCode implements error, but not all codes should be
+// A ReturnCode is an AniDB UDP API return code.
+// Note that even though ReturnCode implements error, not all ReturnCode values should be
 // considered errors.
-type returnCode int
+type ReturnCode int
 
 const (
 	// 505 ILLEGAL INPUT OR ACCESS DENIED
-	illegalInput returnCode = 505
+	IllegalInput ReturnCode = 505
 	// 555 BANNED
 	// {str reason}
-	banned returnCode = 555
+	Banned ReturnCode = 555
 	// 598 UNKNOWN COMMAND
-	unknownCmd returnCode = 598
+	UnknownCmd ReturnCode = 598
 	// 600 INTERNAL SERVER ERROR
-	internalErr returnCode = 600
+	InternalErr ReturnCode = 600
 	// 601 ANIDB OUT OF SERVICE - TRY AGAIN LATER
-	outOfService returnCode = 601
+	OutOfService ReturnCode = 601
 	// 602 SERVER BUSY - TRY AGAIN LATER
-	serverBusy returnCode = 602
+	ServerBusy ReturnCode = 602
 	// 604 TIMEOUT - DELAY AND RESUBMIT
-	timeout returnCode = 604
+	Timeout ReturnCode = 604
 
 	// Additional return codes for all commands that require login:
 	// 501 LOGIN FIRST
-	loginFirst returnCode = 501
+	LoginFirst ReturnCode = 501
 	// 502 ACCESS DENIED
-	accessDenied returnCode = 502
+	AccessDenied ReturnCode = 502
 	// 506 INVALID SESSION
-	invalidSession returnCode = 506
+	InvalidSession ReturnCode = 506
 )
 
-//go:generate stringer -type=returnCode
+//go:generate stringer -type=ReturnCode
 
-func (c returnCode) Error() string {
+func (c ReturnCode) Error() string {
 	return fmt.Sprintf("return code %d %s", c, c.String())
 }
 

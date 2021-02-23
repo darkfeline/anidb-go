@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package anidb
+package udpapi
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
 	"sync"
 	"time"
@@ -33,8 +32,6 @@ const defaultServer = "api.anidb.net:9000"
 
 // An sessionConfig is used for starting an AniDB UDP session.
 type sessionConfig struct {
-	// If empty, use default server.
-	Server        string
 	UserName      string
 	UserPassword  string
 	ClientName    string
@@ -49,7 +46,7 @@ type sessionConfig struct {
 // A udpSession's methods are concurrency safe.
 type udpSession struct {
 	// Set on init
-	p      *reqPipe
+	p      *Mux
 	logger Logger
 
 	// Mutex protected
@@ -61,30 +58,18 @@ type udpSession struct {
 
 // startUDPSession starts a UDP session.
 // context is used for initializing the session only.
-// reqPipes must only be used with a single session at a time.
+// Muxs must only be used with a single session at a time.
 // You must close the session after use. XXXXXXXXXXXXXXXXXX
-func startUDPSession(ctx context.Context, c *sessionConfig) (_ *udpSession, err error) {
-	srv := c.Server
-	if srv == "" {
-		srv = defaultServer
-	}
+func startUDPSession(ctx context.Context, p *Mux, c *sessionConfig) (_ *udpSession, err error) {
 	logger := c.Logger
 	if logger == nil {
 		logger = nullLogger{}
 	}
-	conn, err := net.Dial("udp", srv)
-	if err != nil {
-		return nil, fmt.Errorf("start UDP session: %s", err)
-	}
 	s := &udpSession{
-		p:      newReqPipe(conn, newUDPLimiter(), logger),
+		p:      p,
 		logger: logger,
 	}
-	defer func() {
-		if err != nil {
-			s.p.close()
-		}
-	}()
+	////////////////// handle existing session
 	if c.APIKey != "" {
 		if err := s.encrypt(ctx, c.UserName, c.APIKey); err != nil {
 			return nil, fmt.Errorf("start UDP session: %s", err)
@@ -109,7 +94,7 @@ func (s *udpSession) close() {
 	ctx, cf := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cf()
 	_ = s.logout(ctx) // XXXXXXXXXX shouldn't always logout?
-	s.p.close()
+	s.p.Close()
 }
 
 func (s *udpSession) sessionValues() url.Values {
@@ -124,26 +109,24 @@ func (s *udpSession) sessionValues() url.Values {
 // request performs a UDP request.  Handles retries.
 // args is modified with a new tag.
 // Concurrency safe.
-func (p *reqPipe) tmpRequest(ctx context.Context, cmd string, args url.Values) (response, error) {
-	p.logger.Printf("Starting request cmd %s", cmd)
+func (m *Mux) tmpRequest(ctx context.Context, cmd string, args url.Values) (Response, error) {
+	m.logger.Printf("Starting request cmd %s", cmd)
 	for ctx.Err() == nil {
-		resp, err := p.request(ctx, cmd, args)
+		resp, err := m.Request(ctx, cmd, args)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
 				// XXXXXXXX retry
 			}
-			return response{}, fmt.Errorf("reqpipe request: %s", err)
+			return Response{}, fmt.Errorf("reqpipe request: %s", err)
 		}
 		// XXXXXXXX check for retriable returnCode
 		return resp, nil
 	}
-	return response{}, fmt.Errorf("reqpipe request: %w", ctx.Err())
+	return Response{}, fmt.Errorf("reqpipe request: %w", ctx.Err())
 }
 
-// A Logger can be used for logging.
-type Logger interface {
-	// Printf must be concurrency safe.
-	Printf(string, ...interface{})
+func retryCommand(ctx context.Context, m *Mux, cmd string, args url.Values) (Response, error) {
+	panic("Not implemented")
 }
 
 // A udpLimiter complies with AniDB UDP API recommendations.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package anidb
+package udpapi
 
 import (
 	"bytes"
@@ -30,23 +30,23 @@ import (
 	"time"
 )
 
-func TestReqPipe(t *testing.T) {
+func TestMux(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
-	t.Cleanup(p.close)
+	m := NewMux(c, testMuxLogger(t))
+	t.Cleanup(m.Close)
 
 	t.Run("first request", func(t *testing.T) {
 		t.Parallel()
-		resp, err := p.request(ctx, "PING", url.Values{"nat": []string{"1"}})
+		resp, err := m.Request(ctx, "PING", url.Values{"nat": []string{"1"}})
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := response{
-			code:   300,
-			header: "PONG",
-			rows:   [][]string{{"123"}},
+		want := Response{
+			Code:   300,
+			Header: "PONG",
+			Rows:   [][]string{{"123"}},
 		}
 		if !reflect.DeepEqual(resp, want) {
 			t.Errorf("Got %#v; want %#v", resp, want)
@@ -54,13 +54,13 @@ func TestReqPipe(t *testing.T) {
 	})
 	t.Run("second request", func(t *testing.T) {
 		t.Parallel()
-		resp, err := p.request(ctx, "PING", url.Values{})
+		resp, err := m.Request(ctx, "PING", url.Values{})
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := response{
-			code:   300,
-			header: "PONG",
+		want := Response{
+			Code:   300,
+			Header: "PONG",
 		}
 		if !reflect.DeepEqual(resp, want) {
 			t.Errorf("Got %#v; want %#v", resp, want)
@@ -96,23 +96,23 @@ func TestReqPipe(t *testing.T) {
 	})
 }
 
-func TestReqPipe_close_requests(t *testing.T) {
+func TestMux_close_requests(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
-	t.Cleanup(p.close)
+	m := NewMux(c, testMuxLogger(t))
+	t.Cleanup(m.Close)
 
 	t.Run("first request", func(t *testing.T) {
 		t.Parallel()
-		_, err := p.request(ctx, "PING", url.Values{"nat": []string{"1"}})
+		_, err := m.Request(ctx, "PING", url.Values{"nat": []string{"1"}})
 		if err == nil {
 			t.Errorf("Expected error")
 		}
 	})
 	t.Run("second request", func(t *testing.T) {
 		t.Parallel()
-		_, err := p.request(ctx, "PING", url.Values{})
+		_, err := m.Request(ctx, "PING", url.Values{})
 		if err == nil {
 			t.Errorf("Expected error")
 		}
@@ -126,28 +126,28 @@ func TestReqPipe_close_requests(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		p.close()
+		m.Close()
 	})
 }
 
-// TODO Add test for reqPipe decryption.
+// TODO Add test for Mux decryption.
 
-func TestReqPipe_compression(t *testing.T) {
+func TestMux_compression(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	p := newReqPipe(c, testLimiter{}, testLogger{t, "reqpipe: "})
-	t.Cleanup(p.close)
+	m := NewMux(c, testMuxLogger(t))
+	t.Cleanup(m.Close)
 
 	t.Run("request", func(t *testing.T) {
 		t.Parallel()
-		resp, err := p.request(ctx, "PING", url.Values{})
+		resp, err := m.Request(ctx, "PING", url.Values{})
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := response{
-			code:   300,
-			header: "PONG",
+		want := Response{
+			Code:   300,
+			Header: "PONG",
 		}
 		if !reflect.DeepEqual(resp, want) {
 			t.Errorf("Got %#v; want %#v", resp, want)
@@ -234,10 +234,10 @@ func TestParseResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := response{
-		code:   720,
-		header: "1234 NOTIFICATION - NEW FILE",
-		rows: [][]string{
+	want := Response{
+		Code:   720,
+		Header: "1234 NOTIFICATION - NEW FILE",
+		Rows: [][]string{
 			{"1234", "12", "34"},
 		},
 	}
@@ -343,14 +343,6 @@ func testContext(t *testing.T, timeout time.Duration) context.Context {
 	return ctx
 }
 
-type testLimiter struct{}
-
-func (testLimiter) Wait(context.Context) error {
-	return nil
-}
-
-func (testLimiter) close() {}
-
 type testLogger struct {
 	t      *testing.T
 	prefix string
@@ -359,4 +351,8 @@ type testLogger struct {
 func (l testLogger) Printf(format string, v ...interface{}) {
 	l.t.Helper()
 	l.t.Logf(l.prefix+format, v...)
+}
+
+func testMuxLogger(t *testing.T) MuxOption {
+	return UseLogger(testLogger{t, "mux: "})
 }

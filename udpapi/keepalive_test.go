@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package anidb
+package udpapi
 
 import (
 	"context"
@@ -24,10 +24,10 @@ import (
 func TestKeepAlive(t *testing.T) {
 	t.Parallel()
 	r := &fakeRequester{
-		resp: response{
-			code:   300,
-			header: "PONG",
-			rows:   [][]string{{"123"}},
+		resp: Response{
+			Code:   300,
+			Header: "PONG",
+			Rows:   [][]string{{"123"}},
 		},
 	}
 	k := newKeepAlive(r, testLogger{t, "keepalive: "})
@@ -76,10 +76,10 @@ func TestKeepAlive(t *testing.T) {
 func TestKeepAlive_large_interval_okay(t *testing.T) {
 	t.Parallel()
 	r := &fakeRequester{
-		resp: response{
-			code:   300,
-			header: "PONG",
-			rows:   [][]string{{"123"}},
+		resp: Response{
+			Code:   300,
+			Header: "PONG",
+			Rows:   [][]string{{"123"}},
 		},
 	}
 	k := newKeepAlive(r, testLogger{t, "keepalive: "})
@@ -99,10 +99,10 @@ func TestKeepAlive_large_interval_okay(t *testing.T) {
 func TestKeepAlive_large_interval_timeout(t *testing.T) {
 	t.Parallel()
 	r := &fakeRequester{
-		resp: response{
-			code:   300,
-			header: "PONG",
-			rows:   [][]string{{"123"}},
+		resp: Response{
+			Code:   300,
+			Header: "PONG",
+			Rows:   [][]string{{"123"}},
 		},
 	}
 	k := newKeepAlive(r, testLogger{t, "keepalive: "})
@@ -120,10 +120,10 @@ func TestKeepAlive_large_interval_timeout(t *testing.T) {
 }
 
 type fakeRequester struct {
-	resp response
+	resp Response
 	err  error
 }
 
-func (r *fakeRequester) request(ctx context.Context, cmd string, v url.Values) (response, error) {
+func (r *fakeRequester) Request(ctx context.Context, cmd string, v url.Values) (Response, error) {
 	return r.resp, r.err
 }
