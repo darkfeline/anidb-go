@@ -124,7 +124,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	m.logger.Printf("Sending cmd %s", cmd)
 	// BUG(darkfeline): Network writes aren't governed by context deadlines.
 	if _, err := m.conn.Write(req); err != nil {
-		return Response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
+		return Response{}, fmt.Errorf("anidb mux request %s: %w", cmd, err)
 	}
 	select {
 	case <-ctx.Done():
@@ -132,7 +132,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	case d := <-c:
 		resp, err := parseResponse(d)
 		if err != nil {
-			return Response{}, fmt.Errorf("reqpipe request %s: %w", cmd, err)
+			return Response{}, fmt.Errorf("anidb mux request %s: %w", cmd, err)
 		}
 		return resp, nil
 	}
