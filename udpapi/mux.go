@@ -36,6 +36,8 @@ import (
 
 // A Mux multiplexes AniDB UDP API requests on a single connection.
 //
+// Mux is a low level API; try Client first.
+//
 // Multiple goroutines may invoke methods on a Mux simultaneously.
 type Mux struct {
 	// Concurrency safe
