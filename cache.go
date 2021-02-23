@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 )
 
-// A TitlesCache represents a cache for AniDB titles data.
+// A TitlesCache is a cache for AniDB titles data.
 type TitlesCache struct {
 	// Path is the path to the cache file.
 	Path string
@@ -80,6 +80,7 @@ func (c *TitlesCache) GetFreshTitles() ([]AnimeT, error) {
 
 // Save saves the cached titles to the cache file.
 // This method sets Updated to false if successful.
+// See also the SaveIfUpdated method, which is probably more useful.
 func (c *TitlesCache) Save() error {
 	if err := os.MkdirAll(filepath.Dir(c.Path), 0777); err != nil {
 		return fmt.Errorf("save titles cache: %s", err)

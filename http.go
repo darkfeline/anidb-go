@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-// A Client describes the AniDB HTTP API client in use.
+// A Client is a client for the AniDB HTTP API.
 // Read the AniDB API documentation about registering a client.
 type Client struct {
 	Name    string
@@ -100,7 +100,8 @@ func RequestAnime(c Client, aid int) (*Anime, error) {
 	return c.RequestAnime(aid)
 }
 
-// An Anime holds information for an anime.
+// An Anime holds information for an anime returned from the AniDB
+// HTTP API.
 type Anime struct {
 	AID          int       `xml:"id,attr"`
 	Titles       []Title   `xml:"titles>title"`
@@ -111,14 +112,16 @@ type Anime struct {
 	Episodes     []Episode `xml:"episodes>episode"`
 }
 
-// A Title holds information for a single anime title.
+// A Title holds information for a single anime title returned from
+// the AniDB HTTP API.
 type Title struct {
 	Name string `xml:",chardata"`
 	Type string `xml:"type,attr"`
 	Lang string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
 }
 
-// An Episode holds information for an episode.
+// An Episode holds information for an episode returned from the AniDB
+// HTTP API.
 type Episode struct {
 	// EpNo is a concatenation of a type string and episode number.  It
 	// should be unique among the episodes for an anime, so it can serve
@@ -129,7 +132,8 @@ type Episode struct {
 	Titles []EpTitle `xml:"title"`
 }
 
-// An EpTitle holds information for a single episode title.
+// An EpTitle holds information for a single episode title returned
+// from the AniDB HTTP API.
 type EpTitle struct {
 	Title string `xml:",chardata"`
 	Lang  string `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`

@@ -84,6 +84,7 @@ func DecodeTitles(d []byte) ([]AnimeT, error) {
 }
 
 // An AnimeT is like Anime but holds title information only.
+// This is used for representing anime titles from the AniDB title dump.
 type AnimeT struct {
 	AID    int     `xml:"aid,attr"`
 	Titles []Title `xml:"title"`
