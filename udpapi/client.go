@@ -32,6 +32,9 @@ const defaultServer = "api.anidb.net:9000"
 
 // A Client is an AniDB UDP API client.
 //
+// The client handles basic rate limiting.
+// The client does not handle retries or most errors.
+//
 // Due to the complexity of correctly using the UDP API, there may be
 // bugs and/or feature gaps.
 type Client struct {
@@ -135,6 +138,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	}
 }
 
+// Logout calls the LOGOUT command.
 func (c *Client) Logout(ctx context.Context) error {
 	v, err := c.sessionValues()
 	if err != nil {
