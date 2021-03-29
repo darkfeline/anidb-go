@@ -160,6 +160,29 @@ func (c *Client) Logout(ctx context.Context) error {
 	}
 }
 
+// FileByHash calls the FILE command by size+ed2k hash.
+func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask FMask, amask FAMask) ([]string, error) {
+	v, err := c.sessionValues()
+	if err != nil {
+		return nil, err
+	}
+	v.Set("size", fmt.Sprintf("%d", size))
+	v.Set("ed2k", hash)
+	v.Set("fmask", fmt.Sprintf("%x", fmask))
+	v.Set("amask", fmt.Sprintf("%x", amask))
+	resp, err := c.m.Request(ctx, "FILE", v)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 220 {
+		return nil, fmt.Errorf("udpapi: FileByHash got bad return code %s", resp.Code)
+	}
+	if n := len(resp.Rows); n != 1 {
+		return nil, fmt.Errorf("udpapi: FileByHash got unexpected number of rows %d", n)
+	}
+	return resp.Rows[0], nil
+}
+
 func (c *Client) sessionValues() (url.Values, error) {
 	v := url.Values{}
 	c.sessionKeyMu.Lock()
