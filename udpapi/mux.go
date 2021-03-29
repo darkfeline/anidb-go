@@ -322,35 +322,22 @@ func parseResponse(b []byte) (Response, error) {
 type ReturnCode int
 
 const (
-	// 505 ILLEGAL INPUT OR ACCESS DENIED
-	IllegalInput ReturnCode = 505
-	// 555 BANNED
-	// {str reason}
-	Banned ReturnCode = 555
-	// 598 UNKNOWN COMMAND
-	UnknownCmd ReturnCode = 598
-	// 600 INTERNAL SERVER ERROR
-	InternalErr ReturnCode = 600
-	// 601 ANIDB OUT OF SERVICE - TRY AGAIN LATER
-	OutOfService ReturnCode = 601
-	// 602 SERVER BUSY - TRY AGAIN LATER
-	ServerBusy ReturnCode = 602
-	// 604 TIMEOUT - DELAY AND RESUBMIT
-	Timeout ReturnCode = 604
-
-	// Additional return codes for all commands that require login:
-	// 501 LOGIN FIRST
-	LoginFirst ReturnCode = 501
-	// 502 ACCESS DENIED
-	AccessDenied ReturnCode = 502
-	// 506 INVALID SESSION
-	InvalidSession ReturnCode = 506
+	LoginFirst     ReturnCode = 501 // 501 LOGIN_FIRST
+	AccessDenied   ReturnCode = 502 // 502 ACCESS_DENIED
+	IllegalInput   ReturnCode = 505 // 505 ILLEGAL_INPUT_OR_ACCESS_DENIED
+	InvalidSession ReturnCode = 506 // 506 INVALID_SESSION
+	Banned         ReturnCode = 555 // 555 BANNED
+	UnknownCmd     ReturnCode = 598 // 598 UNKNOWN_COMMAND
+	InternalErr    ReturnCode = 600 // 600 INTERNAL_SERVER_ERROR
+	OutOfService   ReturnCode = 601 // 601 ANIDB_OUT_OF_SERVICE
+	ServerBusy     ReturnCode = 602 // 602 SERVER_BUSY
+	Timeout        ReturnCode = 604 // 604 TIMEOUT - DELAY AND RESUBMIT
 )
 
-//go:generate stringer -type=ReturnCode
+//go:generate stringer -type=ReturnCode -linecomment
 
 func (c ReturnCode) Error() string {
-	return fmt.Sprintf("return code %d %s", c, c.String())
+	return c.String()
 }
 
 // DEFLATE
