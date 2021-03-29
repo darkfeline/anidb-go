@@ -18,6 +18,8 @@ import (
 	"context"
 	"net"
 	"net/url"
+
+	"go.felesatra.moe/anidb/udpapi"
 )
 
 func ExampleMux() {
