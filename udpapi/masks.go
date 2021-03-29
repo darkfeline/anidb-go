@@ -14,6 +14,7 @@
 
 package udpapi
 
+// An FMask is a mask for the FILE command fmask field.
 type FMask uint64
 
 const (
@@ -104,6 +105,7 @@ const (
 	_
 )
 
+// An FAMask is a mask for the FILE command amask field.
 type FAMask uint32
 
 const (
