@@ -67,6 +67,12 @@ type ClientOption interface {
 	clientOption()
 }
 
+// Close closes the Client.
+func (c *Client) Close() {
+	// BUG(darkfeline): Client.Close should try to logout first.
+	c.m.Close()
+}
+
 // A UserInfo contains user information for authentication and encryption.
 type UserInfo struct {
 	UserName     string
