@@ -22,14 +22,13 @@ import (
 
 // A Limiter is a rate limiter that complies with AniDB UDP API flood
 // prevention recommendations.
-type Limiter struct {
+type limiter struct {
 	short *rate.Limiter
 	long  *rate.Limiter
 }
 
-// NewLimiter returns a new Limiter.
-func NewLimiter() *Limiter {
-	return &Limiter{
+func newLimiter() *limiter {
+	return &limiter{
 		// Every 2 sec short term
 		short: rate.NewLimiter(0.5, 1),
 		// Every 4 sec long term after 60 seconds
@@ -37,7 +36,7 @@ func NewLimiter() *Limiter {
 	}
 }
 
-func (l Limiter) Wait(ctx context.Context) error {
+func (l limiter) Wait(ctx context.Context) error {
 	if err := l.long.Wait(ctx); err != nil {
 		return err
 	}

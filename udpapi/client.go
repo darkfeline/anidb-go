@@ -40,7 +40,7 @@ const defaultServer = "api.anidb.net:9000"
 type Client struct {
 	conn          net.Conn
 	m             *Mux
-	limiter       *Limiter
+	limiter       *limiter
 	sessionKeyMu  sync.Mutex
 	sessionKey    string
 	ClientName    string
@@ -56,7 +56,7 @@ func NewClient(o ...ClientOption) (*Client, error) {
 	}
 	c := &Client{
 		conn:    conn,
-		limiter: NewLimiter(),
+		limiter: newLimiter(),
 	}
 	c.m = NewMux(conn)
 	return c, nil
