@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // A Client is a client for the AniDB HTTP API.
@@ -40,7 +41,9 @@ type Limiter interface {
 	Wait(context.Context) error
 }
 
-var httpClient = http.Client{}
+var httpClient = http.Client{
+	Timeout: 5 * time.Second,
+}
 
 func (c *Client) httpAPI(params map[string]string) ([]byte, error) {
 	if c.Limiter != nil {
