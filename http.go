@@ -126,6 +126,7 @@ type Title struct {
 // An Episode holds information for an episode returned from the AniDB
 // HTTP API.
 type Episode struct {
+	EID int `xml:"id,attr"`
 	// EpNo is a concatenation of a type string and episode number.  It
 	// should be unique among the episodes for an anime, so it can serve
 	// as a unique identifier.
