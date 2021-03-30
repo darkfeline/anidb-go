@@ -40,14 +40,15 @@ import (
 //
 // Multiple goroutines may invoke methods on a Mux simultaneously.
 type Mux struct {
+	Logger Logger
+
 	// Concurrency safe
 	wg         sync.WaitGroup
 	responses  responseMap
 	tagCounter tagCounter
 
 	// Set on init
-	conn   net.Conn
-	logger Logger
+	conn net.Conn
 
 	// Mutex protected
 	block   cipher.Block
@@ -61,7 +62,7 @@ type Mux struct {
 func NewMux(conn net.Conn, o ...MuxOption) *Mux {
 	m := &Mux{
 		conn:   conn,
-		logger: nullLogger{},
+		Logger: nullLogger{},
 	}
 	for _, o := range o {
 		o.apply(m)
@@ -85,20 +86,6 @@ type Logger interface {
 	Printf(string, ...interface{})
 }
 
-// UseLogger returns a MuxOption for setting a Logger.
-func UseLogger(l Logger) MuxOption {
-	return loggerOpt{l}
-}
-
-type loggerOpt struct {
-	logger Logger
-}
-
-func (loggerOpt) muxOption() {}
-func (o loggerOpt) apply(m *Mux) {
-	m.logger = o.logger
-}
-
 // Request performs an AniDB UDP API request.
 // args is modified by setting a new tag.
 // This method does not handle retries or rate limiting.
@@ -114,7 +101,7 @@ func (o loggerOpt) apply(m *Mux) {
 func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Response, error) {
 	ctx, cf := context.WithTimeout(ctx, 5*time.Second)
 	defer cf()
-	m.logger.Printf("Starting request cmd %s", cmd)
+	m.Logger.Printf("Starting request cmd %s", cmd)
 	t := m.tagCounter.next()
 	args.Set("tag", string(t))
 	req := []byte(cmd + " " + args.Encode())
@@ -123,7 +110,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	}
 	c := m.responses.waitFor(t)
 	defer m.responses.cancel(t)
-	m.logger.Printf("Sending cmd %s", cmd)
+	m.Logger.Printf("Sending cmd %s", cmd)
 	// BUG(darkfeline): Network writes aren't governed by context deadlines.
 	if _, err := m.conn.Write(req); err != nil {
 		return Response{}, fmt.Errorf("udpapi: %w", err)
@@ -178,7 +165,7 @@ func (m *Mux) handleResponses() {
 			if errors.As(readErr, &err) && !err.Temporary() {
 				return
 			}
-			m.logger.Printf("Error reading from UDP conn: %s", readErr)
+			m.Logger.Printf("Error reading from UDP conn: %s", readErr)
 		}
 	}
 }
@@ -190,7 +177,7 @@ func (m *Mux) handleResponseData(data []byte) {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
-			m.logger.Printf("Error handling response: %s", err)
+			m.Logger.Printf("Error handling response: %s", err)
 			return
 		}
 	}
@@ -198,7 +185,7 @@ func (m *Mux) handleResponseData(data []byte) {
 		var err error
 		data, err = decompress(data[2:])
 		if err != nil {
-			m.logger.Printf("Error handling response: %s", err)
+			m.Logger.Printf("Error handling response: %s", err)
 			return
 		}
 	}

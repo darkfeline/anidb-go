@@ -34,7 +34,8 @@ func TestMux(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	m := NewMux(c, testMuxLogger(t))
+	m := NewMux(c)
+	m.Logger = testMuxLogger(t)
 	t.Cleanup(m.Close)
 
 	t.Run("first request", func(t *testing.T) {
@@ -100,7 +101,8 @@ func TestMux_close_requests(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	m := NewMux(c, testMuxLogger(t))
+	m := NewMux(c)
+	m.Logger = testMuxLogger(t)
 	t.Cleanup(m.Close)
 
 	t.Run("first request", func(t *testing.T) {
@@ -136,7 +138,8 @@ func TestMux_compression(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	m := NewMux(c, testMuxLogger(t))
+	m := NewMux(c)
+	m.Logger = testMuxLogger(t)
 	t.Cleanup(m.Close)
 
 	t.Run("request", func(t *testing.T) {
@@ -353,6 +356,6 @@ func (l testLogger) Printf(format string, v ...interface{}) {
 	l.t.Logf(l.prefix+format, v...)
 }
 
-func testMuxLogger(t *testing.T) MuxOption {
-	return UseLogger(testLogger{t, "mux: "})
+func testMuxLogger(t *testing.T) testLogger {
+	return testLogger{t, "mux: "}
 }
