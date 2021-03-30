@@ -31,6 +31,7 @@ func TestDecodeAnime(t *testing.T) {
 	}
 	e := []Episode{
 		{
+			EID:    113,
 			EpNo:   "1",
 			Length: 25,
 			Titles: []EpTitle{
@@ -40,6 +41,7 @@ func TestDecodeAnime(t *testing.T) {
 			},
 		},
 		{
+			EID:    28864,
 			EpNo:   "S1",
 			Length: 75,
 			Titles: []EpTitle{
