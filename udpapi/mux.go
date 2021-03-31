@@ -36,6 +36,10 @@ import (
 
 // A Mux multiplexes AniDB UDP API requests on a single connection.
 //
+// Mux basically handles the response tag in the UDP API which allows
+// asynchronous, simultaneous requests, as well as decompression and
+// decryption, as those are necessary to read the response tag.
+//
 // Mux is a low level API; try Client first.
 //
 // Multiple goroutines may invoke methods on a Mux simultaneously.
