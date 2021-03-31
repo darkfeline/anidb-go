@@ -59,13 +59,10 @@ type Mux struct {
 // You must call Close after use.
 // The underlying conn will be closed internally and should not
 // be closed directly by the caller.
-func NewMux(conn net.Conn, o ...MuxOption) *Mux {
+func NewMux(conn net.Conn) *Mux {
 	m := &Mux{
 		conn:   conn,
 		Logger: nullLogger{},
-	}
-	for _, o := range o {
-		o.apply(m)
 	}
 	m.wg.Add(1)
 	go func() {
@@ -73,11 +70,6 @@ func NewMux(conn net.Conn, o ...MuxOption) *Mux {
 		m.handleResponses()
 	}()
 	return m
-}
-
-// A MuxOption is passed to NewMux for configuration.
-type MuxOption interface {
-	apply(*Mux)
 }
 
 // A Logger can be used for logging.
