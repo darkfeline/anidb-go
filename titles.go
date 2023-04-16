@@ -38,11 +38,6 @@ func RequestTitles() ([]AnimeT, error) {
 	return ts, nil
 }
 
-const (
-	packageVersion = "1.1.0"
-	userAgent      = "go.felesatra.moe/anidb " + packageVersion
-)
-
 const titlesURL = "http://anidb.net/api/anime-titles.xml.gz"
 
 func downloadTitles() ([]byte, error) {

@@ -110,9 +110,6 @@ func (c *TitlesCache) SaveIfUpdated() error {
 	return c.Save()
 }
 
-// Name used for various XDG directories for this package.
-const xdgName = "go.felesatra.moe_anidb"
-
 func defaultTitlesCacheFile() string {
 	return filepath.Join(cacheDir(), xdgName, "titles.gob")
 }
