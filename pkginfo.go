@@ -15,7 +15,7 @@
 package anidb
 
 const (
-	packageVersion = "1.1.0"
+	packageVersion = "1.3.0"
 	userAgent      = "go.felesatra.moe/anidb " + packageVersion
 )
 
