@@ -144,7 +144,7 @@ func (m *Mux) Close() {
 }
 
 // handleResponses handles incoming responses.
-// Should be a called as a goroutine.
+// Should be called as a goroutine.
 // Will exit when connection is closed.
 func (m *Mux) handleResponses() {
 	buf := make([]byte, 1400) // Max UDP size
