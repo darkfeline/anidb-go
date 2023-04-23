@@ -83,7 +83,7 @@ type UserInfo struct {
 // Encrypt calls the ENCRYPT command.
 func (c *Client) Encrypt(ctx context.Context, u UserInfo) error {
 	if u.APIKey == "" {
-		return errors.New("udpapi: APIKey require for encryption")
+		return errors.New("udpapi: APIKey required for encryption")
 	}
 	v := url.Values{}
 	v.Set("user", u.UserName)
