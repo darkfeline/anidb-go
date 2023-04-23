@@ -58,9 +58,9 @@ func NewClient(o ...ClientOption) (*Client, error) {
 	}
 	c := &Client{
 		conn:    conn,
+		m:       NewMux(conn),
 		limiter: newLimiter(),
 	}
-	c.m = NewMux(conn)
 	return c, nil
 }
 
