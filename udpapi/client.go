@@ -70,6 +70,7 @@ type ClientOption interface {
 // Close closes the Client.
 // This does not call LOGOUT, so you should try to LOGOUT first.
 func (c *Client) Close() {
+	// The connection is closed by the Mux.
 	c.m.Close()
 }
 
