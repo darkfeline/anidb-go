@@ -41,8 +41,10 @@ type Client struct {
 	conn          net.Conn
 	m             *Mux
 	limiter       *limiter
-	sessionKeyMu  sync.Mutex
-	sessionKey    string
+
+	sessionKeyMu sync.Mutex
+	sessionKey   string
+
 	ClientName    string
 	ClientVersion int32
 }
