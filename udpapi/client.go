@@ -137,7 +137,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 		c.sessionKeyMu.Unlock()
 		// TODO Make address comparison more reliable
 		if our := c.conn.LocalAddr().String(); our != parts[1] {
-			// TODO Detected NAT
+			// TODO Detected NAT, need to keepalive
 		}
 		return nil
 	default:
