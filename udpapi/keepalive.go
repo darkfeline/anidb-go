@@ -30,7 +30,7 @@ var _ requester = &Mux{}
 
 type keepAlive struct {
 	r      requester
-	logger Logger // Must be non-nil
+	logger Logger
 
 	wg      sync.WaitGroup
 	sleeper inactiveSleeper
@@ -45,6 +45,7 @@ type keepAlive struct {
 // newKeepAlive starts a keepalive goroutine to keep the AniDB UDP
 // connection alive behind NAT.
 // You must call start to actually start the keepalive.
+// Logger must be non-nil.
 func newKeepAlive(r requester, l Logger) *keepAlive {
 	k := &keepAlive{
 		r:      r,
