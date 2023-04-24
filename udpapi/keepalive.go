@@ -82,7 +82,7 @@ func (k *keepAlive) stop() {
 }
 
 // initialize keepalive, but without starting background goroutine.
-// For testing.
+// This is a separate method for testing purposes.
 func (k *keepAlive) initialize() error {
 	port, err := keepAlivePing(context.Background(), k.r)
 	if err != nil {
