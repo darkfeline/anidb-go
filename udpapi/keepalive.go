@@ -59,7 +59,7 @@ func newKeepAlive(r requester, l Logger) *keepAlive {
 // You must call stop after use.
 func (k *keepAlive) start() error {
 	if err := k.initialize(); err != nil {
-		fmt.Errorf("start keepalive: %s", err)
+		return fmt.Errorf("start keepalive: %s", err)
 	}
 	k.wg.Add(1)
 	go func() {
