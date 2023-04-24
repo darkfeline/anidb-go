@@ -153,7 +153,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	v.Set("protover", protoVer)
 	v.Set("client", c.ClientName)
 	v.Set("clientver", strconv.Itoa(int(c.ClientVersion)))
-	v.Set("nat", "1") // TODO use this
+	v.Set("nat", "1")
 	v.Set("comp", "1")
 	resp, err := c.m.Request(ctx, "AUTH", v)
 	if err != nil {
@@ -161,7 +161,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	}
 	switch resp.Code {
 	case 201:
-		// TODO New anidb UDP API version available
+		// TODO Handle new anidb UDP API version available
 		fallthrough
 	case 200:
 		parts := strings.SplitN(resp.Header, " ", 3)
@@ -171,7 +171,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 		c.sessionKeyMu.Lock()
 		c.sessionKey = parts[0]
 		c.sessionKeyMu.Unlock()
-		// TODO Make address comparison more reliable
+		// TODO Support different IP formats, e.g. short forms
 		if our := c.conn.LocalAddr().String(); our != parts[1] {
 			// TODO Detected NAT, need to keepalive
 		}
