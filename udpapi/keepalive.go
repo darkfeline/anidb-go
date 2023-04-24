@@ -22,6 +22,7 @@ import (
 	"time"
 )
 
+// A requester is used to issue requests to AniDB UDP API.
 type requester interface {
 	Request(context.Context, string, url.Values) (Response, error)
 }
