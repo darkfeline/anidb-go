@@ -35,7 +35,6 @@ type keepAlive struct {
 	interval time.Duration
 
 	wg  sync.WaitGroup
-	t   *time.Timer
 	ctx context.Context
 	cf  context.CancelFunc
 
@@ -52,7 +51,6 @@ func newKeepAlive(c *keepAliveConfig) *keepAlive {
 		r:        c.r,
 		logger:   c.logger,
 		interval: c.interval,
-		t:        time.NewTimer(0),
 	}
 	return k
 }
@@ -97,15 +95,19 @@ func (k *keepAlive) initialize() error {
 
 // background goroutine
 func (k *keepAlive) background() {
+	t := time.NewTimer(1 * time.Hour)
+	if !t.Stop() {
+		<-t.C
+	}
 	for {
-		if !k.t.Stop() {
-			<-k.t.C
-		}
-		k.t.Reset(k.interval)
+		t.Reset(k.interval)
 		select {
 		case <-k.ctx.Done():
+			if !t.Stop() {
+				<-t.C
+			}
 			return
-		case <-k.t.C:
+		case <-t.C:
 		}
 		port, err := keepAlivePing(k.ctx, k.r)
 		if err != nil {
