@@ -168,19 +168,22 @@ func (s *inactiveSleeper) activate(t time.Time) {
 // sleep sleeps until the duration is reached since last activity or
 // context expires.
 // Returns an error for context expiration.
+// Must be called from at most one goroutine.
 func (s *inactiveSleeper) sleep(ctx context.Context, d time.Duration) error {
-	elapsed := time.Duration(0)
-	for elapsed < d {
-		if s.tmr == nil {
-			s.tmr = time.NewTimer(time.Hour)
+	if s.tmr == nil {
+		s.tmr = time.NewTimer(d)
+	}
+	for {
+		elapsed := s.sinceActive(time.Now())
+		if elapsed >= d {
+			break
 		}
 		if !s.tmr.Stop() {
 			<-s.tmr.C
 		}
 		s.tmr.Reset(d - elapsed)
 		select {
-		case t := <-s.tmr.C:
-			elapsed = s.sinceActive(t)
+		case <-s.tmr.C:
 		case <-ctx.Done():
 			return ctx.Err()
 		}
