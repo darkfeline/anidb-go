@@ -99,6 +99,7 @@ func (k *keepAlive) initialize() error {
 func (k *keepAlive) background() {
 	for {
 		if err := k.sleeper.sleep(k.ctx, k.interval); err != nil {
+			// error indicates context cancellation
 			return
 		}
 		port, err := keepAlivePing(k.ctx, k.r)
