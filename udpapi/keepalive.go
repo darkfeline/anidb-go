@@ -48,6 +48,7 @@ type keepAlive struct {
 // You must call start to actually start the keepalive.
 // Logger must be non-nil.
 func newKeepAlive(r requester, l Logger) *keepAlive {
+	// TODO rewrite with static ping interval
 	k := &keepAlive{
 		r:      r,
 		logger: l,
