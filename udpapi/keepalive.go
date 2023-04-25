@@ -205,9 +205,11 @@ func keepAlivePing(ctx context.Context, r requester) (port string, _ error) {
 	if err != nil {
 		return "", err
 	}
-	// TODO check for bad returnCode, retries
+	if resp.Code != 300 {
+		return "", fmt.Errorf("ping: unexpected return code %d", resp.Code)
+	}
 	if len(resp.Rows) < 1 || len(resp.Rows[0]) < 1 {
-		return "", fmt.Errorf("ping: unexpected response rows")
+		return "", fmt.Errorf("ping: unexpected response rows: %v", resp.Rows)
 	}
 	return resp.Rows[0][0], nil
 }
