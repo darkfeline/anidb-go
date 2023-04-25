@@ -30,16 +30,16 @@ type requester interface {
 var _ requester = &Mux{}
 
 type keepAlive struct {
-	r      requester
-	logger Logger
+	r        requester
+	logger   Logger
+	interval time.Duration
 
-	wg      sync.WaitGroup
-	sleeper inactiveSleeper
-	ctx     context.Context
-	cf      context.CancelFunc
+	wg  sync.WaitGroup
+	t   *time.Timer
+	ctx context.Context
+	cf  context.CancelFunc
 
 	lastPort   string
-	interval   time.Duration
 	timeoutHit bool
 }
 
@@ -47,13 +47,20 @@ type keepAlive struct {
 // connection alive behind NAT.
 // You must call start to actually start the keepalive.
 // Logger must be non-nil.
-func newKeepAlive(r requester, l Logger) *keepAlive {
-	// TODO rewrite with static ping interval
+func newKeepAlive(c *keepAliveConfig) *keepAlive {
 	k := &keepAlive{
-		r:      r,
-		logger: l,
+		r:        c.r,
+		logger:   c.logger,
+		interval: c.interval,
+		t:        time.NewTimer(0),
 	}
 	return k
+}
+
+type keepAliveConfig struct {
+	r        requester
+	logger   Logger
+	interval time.Duration
 }
 
 // start starts the keepalive.
@@ -70,13 +77,6 @@ func (k *keepAlive) start() error {
 	return nil
 }
 
-// notify notifies keepAlive that a packet was sent at the given time in
-// order to accurately calibrate the keepalive interval.
-// Concurrent safe.
-func (k *keepAlive) notify(t time.Time) {
-	k.sleeper.activate(t)
-}
-
 func (k *keepAlive) stop() {
 	k.cf()
 	k.wg.Wait()
@@ -85,126 +85,44 @@ func (k *keepAlive) stop() {
 // initialize keepalive, but without starting background goroutine.
 // This is a separate method for testing purposes.
 func (k *keepAlive) initialize() error {
-	port, err := keepAlivePing(context.Background(), k.r)
+	ctx := context.Background()
+	port, err := keepAlivePing(ctx, k.r)
 	if err != nil {
 		return err
 	}
-	k.sleeper.activate(time.Now())
 	k.lastPort = port
-	k.interval = time.Minute
-	k.ctx, k.cf = context.WithCancel(context.Background())
+	k.ctx, k.cf = context.WithCancel(ctx)
 	return nil
 }
 
 // background goroutine
 func (k *keepAlive) background() {
 	for {
-		if err := k.sleeper.sleep(k.ctx, k.interval); err != nil {
-			// error indicates context cancellation
+		if !k.t.Stop() {
+			<-k.t.C
+		}
+		k.t.Reset(k.interval)
+		select {
+		case <-k.ctx.Done():
 			return
+		case <-k.t.C:
 		}
 		port, err := keepAlivePing(k.ctx, k.r)
 		if err != nil {
-			k.logger.Printf("Error: %s", err)
-			k.interval += 10 * time.Second
+			k.logger.Printf("keepalive ping error: %s", err)
 			continue
 		}
-		k.updateInterval(time.Now(), port)
-	}
-}
-
-const (
-	minKeepAliveInterval = 30 * time.Second
-	maxKeepAliveInterval = 5 * time.Minute
-)
-
-func (k *keepAlive) updateInterval(t time.Time, port string) {
-	interval := k.sleeper.sinceActive(t)
-	k.sleeper.activate(t)
-	if k.lastPort != port {
-		// If the actual interval is much greater than the
-		// planned interval, then we can't infer anything from
-		// the port change.  This should only happen when the
-		// ping fails multiple times and is retried.
-		if interval-k.interval > 10*time.Second {
-			k.logger.Printf("Port reset, but interval %s much larger than expected %s",
-				interval, k.interval)
-			return
-		}
-		k.timeoutHit = true
-		k.interval = k.interval - (10 * time.Second)
-		k.logger.Printf("Port reset, lowering interval to %s", k.interval)
-		if k.interval < minKeepAliveInterval {
-			k.interval = minKeepAliveInterval
-			k.logger.Printf("Minimum interval restricted to %s", k.interval)
-		}
-		k.lastPort = port
-	} else if !k.timeoutHit {
-		k.interval = interval + (10 * time.Second)
-		k.logger.Printf("Timeout not hit, raising interval to %s", k.interval)
-		if k.interval > maxKeepAliveInterval {
-			k.interval = maxKeepAliveInterval
-			k.logger.Printf("Maximum interval restricted to %s", k.interval)
+		if port != k.lastPort {
+			new := k.interval / 2
+			k.logger.Printf("keepalive: port %d != lastPort %d; NAT expired, lowering interval from %s to %s",
+				port, k.lastPort, k.interval)
+			k.interval = new
 		}
 	}
 }
 
-// An inactiveSleeper tracks sleeping for a period of inactivity.
-// Zero value is ready for use.
-type inactiveSleeper struct {
-	tmr          *time.Timer
-	lastActive   time.Time
-	lastActiveMu sync.Mutex
-}
-
-// activate indicates activity at the given time.
-// Safe to call concurrently.
-func (s *inactiveSleeper) activate(t time.Time) {
-	s.lastActiveMu.Lock()
-	if t.After(s.lastActive) {
-		s.lastActive = t
-	}
-	s.lastActiveMu.Unlock()
-}
-
-// sleep sleeps until the duration is reached since last activity or
-// context expires.
-// Returns an error for context expiration.
-// Must be called from at most one goroutine.
-func (s *inactiveSleeper) sleep(ctx context.Context, d time.Duration) error {
-	if s.tmr == nil {
-		s.tmr = time.NewTimer(d)
-	}
-	for {
-		elapsed := s.sinceActive(time.Now())
-		if elapsed >= d {
-			break
-		}
-		if !s.tmr.Stop() {
-			<-s.tmr.C
-		}
-		s.tmr.Reset(d - elapsed)
-		select {
-		case <-s.tmr.C:
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-	return nil
-}
-
-func (s *inactiveSleeper) sinceActive(t time.Time) time.Duration {
-	s.lastActiveMu.Lock()
-	defer s.lastActiveMu.Unlock()
-	return t.Sub(s.lastActive)
-}
-
-func (s *inactiveSleeper) afterActive(d time.Duration) time.Time {
-	s.lastActiveMu.Lock()
-	defer s.lastActiveMu.Unlock()
-	return s.lastActive.Add(d)
-}
-
+// keepAlivePing sends one PING request.
+// This function sets a timeout on the request.
 func keepAlivePing(ctx context.Context, r requester) (port string, _ error) {
 	ctx, cf := context.WithTimeout(ctx, 2*time.Second)
 	defer cf()
