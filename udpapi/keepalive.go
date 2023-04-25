@@ -155,6 +155,8 @@ type inactiveSleeper struct {
 	lastActiveMu sync.Mutex
 }
 
+// activate indicates activity at the given time.
+// Safe to call concurrently.
 func (s *inactiveSleeper) activate(t time.Time) {
 	s.lastActiveMu.Lock()
 	if t.After(s.lastActive) {
