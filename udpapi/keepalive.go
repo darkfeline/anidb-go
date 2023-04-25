@@ -95,17 +95,13 @@ func (k *keepAlive) initialize() error {
 
 // background goroutine
 func (k *keepAlive) background() {
-	t := time.NewTimer(1 * time.Hour)
-	if !t.Stop() {
-		<-t.C
-	}
+	t := time.NewTimer(0)
+	<-t.C
 	for {
 		t.Reset(k.interval)
 		select {
 		case <-k.ctx.Done():
-			if !t.Stop() {
-				<-t.C
-			}
+			t.Stop()
 			return
 		case <-t.C:
 		}
