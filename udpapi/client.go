@@ -51,9 +51,13 @@ type Client struct {
 }
 
 // NewClient creates a new Client.
+// ClientConfig must not be nil.
+// ClientConfig is modified to initialize default values.
 // The caller should set ClientName and ClientVersion on the returned Client.
-func NewClient(o ...ClientOption) (*Client, error) {
-	opt := unpackClientOption(o...)
+func NewClient(cfg *ClientConfig) (*Client, error) {
+	if cfg.Logger == nil {
+		cfg.Logger = nullLogger{}
+	}
 	conn, err := net.Dial("udp", defaultServer)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi: %w", err)
@@ -62,46 +66,15 @@ func NewClient(o ...ClientOption) (*Client, error) {
 		conn:    conn,
 		m:       NewMux(conn),
 		limiter: newLimiter(),
-		logger:  opt.Logger,
+		logger:  cfg.Logger,
 	}
 	return c, nil
 }
 
-// unpackClientOption unpacks options into a single struct.
-// Expands default values.
-// Always returns non-nil.
-func unpackClientOption(o ...ClientOption) *ClientOpts {
-	var opt *ClientOpts
-	for _, o := range o {
-		switch o := o.(type) {
-		case *ClientOpts:
-			opt = o
-		default:
-			panic(fmt.Sprintf("Unknown ClientOption type: %T", o))
-		}
-	}
-	if opt == nil {
-		opt = &ClientOpts{}
-	}
-	if opt.Logger == nil {
-		opt.Logger = nullLogger{}
-	}
-	return opt
-}
-
-// A ClientOption is passed to NewClient for configuration.
-type ClientOption interface {
-	clientOption()
-}
-
-// A ClientOpts is passed to NewClient for configuration.
-type ClientOpts struct {
+// A ClientConfig is passed to NewClient for configuration.
+type ClientConfig struct {
 	Logger Logger
 }
-
-var _ ClientOption = &ClientOpts{}
-
-func (*ClientOpts) clientOption() {}
 
 // Close closes the Client.
 // This does not call LOGOUT, so you should try to LOGOUT first.
