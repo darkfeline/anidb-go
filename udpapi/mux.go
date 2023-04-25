@@ -89,6 +89,9 @@ type Logger interface {
 // This method handles decompression and decryption, as they are
 // necessary to parse response tags.
 //
+// Callers must set a deadline; otherwise the request may block
+// indefinitely due to dropped UDP packets.
+//
 // See the AniDB UDP API documentation for more information.
 //
 // The returned error may be errors.Is with these errors:
