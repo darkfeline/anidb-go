@@ -52,12 +52,8 @@ type Client struct {
 
 // NewClient creates a new Client.
 // ClientConfig must not be nil.
-// ClientConfig is modified to initialize default values.
 // The caller should set ClientName and ClientVersion on the returned Client.
 func NewClient(cfg *ClientConfig) (*Client, error) {
-	if cfg.Logger == nil {
-		cfg.Logger = nullLogger{}
-	}
 	conn, err := net.Dial("udp", defaultServer)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi: %w", err)
@@ -68,11 +64,15 @@ func NewClient(cfg *ClientConfig) (*Client, error) {
 		limiter: newLimiter(),
 		logger:  cfg.Logger,
 	}
+	if c.logger == nil {
+		c.logger == nullLogger{}
+	}
 	return c, nil
 }
 
 // A ClientConfig is passed to NewClient for configuration.
 type ClientConfig struct {
+	// Logger for logging.  If nil, logging is disabled.
 	Logger Logger
 }
 
