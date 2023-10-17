@@ -199,6 +199,29 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 	return resp.Rows[0], nil
 }
 
+// Ping calls the PING command.
+func (c *Client) Ping(ctx context.Context) (string, error) {
+	v, err := c.sessionValues()
+	if err != nil {
+		return "", err
+	}
+	v.Set("nat", "1")
+	resp, err := c.m.Request(ctx, "PING", v)
+	if err != nil {
+		return "", err
+	}
+	if resp.Code != 300 {
+		return "", fmt.Errorf("udpapi: Ping got bad return code %s", resp.Code)
+	}
+	if n := len(resp.Rows); n != 1 {
+		return "", fmt.Errorf("udpapi: Ping got unexpected number of rows %d", n)
+	}
+	if n := len(resp.Rows[0]); n != 1 {
+		return "", fmt.Errorf("udpapi: Ping got unexpected number of fields %d", n)
+	}
+	return resp.Rows[0][0], nil
+}
+
 func (c *Client) sessionValues() (url.Values, error) {
 	v := url.Values{}
 	c.sessionKeyMu.Lock()
