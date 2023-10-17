@@ -18,6 +18,7 @@ package udpapi
 type FMask uint64
 
 const (
+	// Byte 5
 	// Bit	Dec	Data Field
 	// 0	1	unused
 	_ FMask = 1 << iota
@@ -35,6 +36,8 @@ const (
 	_
 	// 7	128	int4 mylist state
 	_
+
+	// Byte 4
 	// Bit	Dec	Data Field
 	// 0	1	str anidb file name
 	FMaskFileName
@@ -52,6 +55,8 @@ const (
 	_
 	// 7	128	str dub language
 	_
+
+	// Byte 3
 	// Bit	Dec	Data Field
 	// 0	1	str file type (extension)
 	FMaskFileType
@@ -69,6 +74,8 @@ const (
 	_
 	// 7	128	str quality
 	_
+
+	// Byte 2
 	// Bit	Dec	Data Field
 	// 0	1	reserved
 	_
@@ -86,6 +93,8 @@ const (
 	FMaskED2k
 	// 7	128	int8 size
 	FMaskSize
+
+	// Byte 1
 	// Bit	Dec	Data Field
 	// 0	1	int2 state
 	FMaskState
@@ -109,6 +118,7 @@ const (
 type FAMask uint32
 
 const (
+	// Byte 4
 	// Bit	Dec	Data Field
 	// 0	1	int4 date aid record updated
 	_ FAMask = 1 << iota
@@ -126,6 +136,8 @@ const (
 	_
 	// 7	128	str group name
 	FAMaskGroupName
+
+	// Byte 3
 	// Bit	Dec	Data Field
 	// 0	1	unused
 	_
@@ -143,6 +155,8 @@ const (
 	_
 	// 7	128	str epno
 	FAMaskEpno
+
+	// Byte 2
 	// Bit	Dec	Data Field
 	// 0	1	retired
 	_
@@ -160,6 +174,8 @@ const (
 	_
 	// 7	128	str romaji name
 	_
+
+	// Byte 1
 	// Bit	Dec	Data Field
 	// 0	1	reserved
 	_
