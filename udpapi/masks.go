@@ -44,6 +44,16 @@ func (m *FileFmask) Set(f string) {
 // A FileAmask is a mask for the FILE command amask field.
 type FileAmask [4]byte
 
+var fileAmaskFields = map[string]bitSpec{}
+
+func (m *FileAmask) Set(f string) {
+	s, ok := fileAmaskFields[f]
+	if !ok {
+		panic(f)
+	}
+	m[s.byte] |= 1 << s.bit
+}
+
 func formatMask(m []byte) string {
 	var sb strings.Builder
 	for _, b := range m {
