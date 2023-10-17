@@ -225,10 +225,11 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 func (c *Client) sessionValues() (url.Values, error) {
 	v := url.Values{}
 	c.sessionKeyMu.Lock()
-	defer c.sessionKeyMu.Unlock()
-	if c.sessionKey == "" {
+	key := c.sessionKey
+	c.sessionKeyMu.Unlock()
+	if key == "" {
 		return nil, errors.New("udpapi: no session key (auth first)")
 	}
-	v.Set("s", c.sessionKey)
+	v.Set("s", key)
 	return v, nil
 }
