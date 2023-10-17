@@ -177,7 +177,7 @@ func (c *Client) Logout(ctx context.Context) error {
 }
 
 // FileByHash calls the FILE command by size+ed2k hash.
-func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask FMask, amask FAMask) ([]string, error) {
+func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask FileFmask, amask FileAmask) ([]string, error) {
 	v, err := c.sessionValues()
 	if err != nil {
 		return nil, err

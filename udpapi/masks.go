@@ -14,14 +14,14 @@
 
 package udpapi
 
-// An FMask is a mask for the FILE command fmask field.
-type FMask uint64
+// A FileFmask is a mask for the FILE command fmask field.
+type FileFmask uint64
 
 const (
 	// Byte 5
 	// Bit	Dec	Data Field
 	// 0	1	unused
-	_ FMask = 1 << iota
+	_ FileFmask = 1 << iota
 	// 1	2	str mylist other
 	_
 	// 2	4	str mylist source
@@ -40,7 +40,7 @@ const (
 	// Byte 4
 	// Bit	Dec	Data Field
 	// 0	1	str anidb file name
-	FMaskFileName
+	FileFmaskFileName
 	// 1	2	unused
 	_
 	// 2	4	unused
@@ -59,7 +59,7 @@ const (
 	// Byte 3
 	// Bit	Dec	Data Field
 	// 0	1	str file type (extension)
-	FMaskFileType
+	FileFmaskFileType
 	// 1	2	str video resolution
 	_
 	// 2	4	int4 video bitrate
@@ -84,20 +84,20 @@ const (
 	// 2	4	unused
 	_
 	// 3	8	str crc32
-	FMaskCRC32
+	FileFmaskCRC32
 	// 4	16	str sha1
-	FMaskSHA1
+	FileFmaskSHA1
 	// 5	32	str md5
-	FMaskMD5
+	FileFmaskMD5
 	// 6	64	str ed2k
-	FMaskED2k
+	FileFmaskED2k
 	// 7	128	int8 size
-	FMaskSize
+	FileFmaskSize
 
 	// Byte 1
 	// Bit	Dec	Data Field
 	// 0	1	int2 state
-	FMaskState
+	FileFmaskState
 	// 1	2	int2 IsDeprecated
 	_
 	// 2	4	list other episodes
@@ -105,23 +105,23 @@ const (
 	// 3	8	int4 mylist id
 	_
 	// 4	16	int4 gid
-	FMaskGID
+	FileFmaskGID
 	// 5	32	int4 eid
-	FMaskEID
+	FileFmaskEID
 	// 6	64	int4 aid
-	FMaskAID
+	FileFmaskAID
 	// 7	128	unused
 	_
 )
 
-// An FAMask is a mask for the FILE command amask field.
-type FAMask uint32
+// A FileAmask is a mask for the FILE command amask field.
+type FileAmask uint32
 
 const (
 	// Byte 4
 	// Bit	Dec	Data Field
 	// 0	1	int4 date aid record updated
-	_ FAMask = 1 << iota
+	_ FileAmask = 1 << iota
 	// 1	2	unused
 	_
 	// 2	4	unused
@@ -135,7 +135,7 @@ const (
 	// 6	64	str group short name
 	_
 	// 7	128	str group name
-	FAMaskGroupName
+	FileAmaskGroupName
 
 	// Byte 3
 	// Bit	Dec	Data Field
@@ -154,7 +154,7 @@ const (
 	// 6	64	str ep name
 	_
 	// 7	128	str epno
-	FAMaskEpno
+	FileAmaskEpno
 
 	// Byte 2
 	// Bit	Dec	Data Field
@@ -186,7 +186,7 @@ const (
 	// 3	8	str related aid list
 	_
 	// 4	16	str type
-	FAMaskType
+	FileAmaskType
 	// 5	32	str year
 	_
 	// 6	64	int4 highest episode number
