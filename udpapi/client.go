@@ -65,7 +65,7 @@ func NewClient(cfg *ClientConfig) (*Client, error) {
 		logger:  cfg.Logger,
 	}
 	if c.logger == nil {
-		c.logger == nullLogger{}
+		c.logger = nullLogger{}
 	}
 	return c, nil
 }
