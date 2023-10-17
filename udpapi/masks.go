@@ -19,12 +19,14 @@ import (
 	"strings"
 )
 
-type bitSpec struct{ byte, bit int }
+// A BitSpec designates a bit in an API mask.
+type BitSpec struct{ byte, bit int }
 
 // A FileFmask is a mask for the FILE command fmask field.
 type FileFmask [5]byte
 
-var fileFmaskFields = map[string]bitSpec{
+// FileFmaskFields describes the bit fields in a FILE fmask.
+var FileFmaskFields = map[string]BitSpec{
 	"aid":   {0, 6},
 	"eid":   {0, 5},
 	"gid":   {0, 4},
@@ -33,8 +35,9 @@ var fileFmaskFields = map[string]bitSpec{
 	"anidb file name": {3, 0},
 }
 
+// Set sets a bit in the mask.
 func (m *FileFmask) Set(f string) {
-	s, ok := fileFmaskFields[f]
+	s, ok := FileFmaskFields[f]
 	if !ok {
 		panic(f)
 	}
@@ -44,10 +47,12 @@ func (m *FileFmask) Set(f string) {
 // A FileAmask is a mask for the FILE command amask field.
 type FileAmask [4]byte
 
-var fileAmaskFields = map[string]bitSpec{}
+// FileAmaskFields describes the bit fields in a FILE amask.
+var FileAmaskFields = map[string]BitSpec{}
 
+// Set sets a bit in the mask.
 func (m *FileAmask) Set(f string) {
-	s, ok := fileAmaskFields[f]
+	s, ok := FileAmaskFields[f]
 	if !ok {
 		panic(f)
 	}
