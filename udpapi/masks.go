@@ -14,183 +14,40 @@
 
 package udpapi
 
-// A FileFmask is a mask for the FILE command fmask field.
-type FileFmask uint64
-
-const (
-	// Byte 5
-	// Bit	Dec	Data Field
-	// 0	1	unused
-	_ FileFmask = 1 << iota
-	// 1	2	str mylist other
-	_
-	// 2	4	str mylist source
-	_
-	// 3	8	str mylist storage
-	_
-	// 4	16	int4 mylist viewdate
-	_
-	// 5	32	int4 mylist viewed
-	_
-	// 6	64	int4 mylist filestate
-	_
-	// 7	128	int4 mylist state
-	_
-
-	// Byte 4
-	// Bit	Dec	Data Field
-	// 0	1	str anidb file name
-	FileFmaskFileName
-	// 1	2	unused
-	_
-	// 2	4	unused
-	_
-	// 3	8	int4 aired date
-	_
-	// 4	16	str description
-	_
-	// 5	32	int4 length in seconds
-	_
-	// 6	64	str sub language
-	_
-	// 7	128	str dub language
-	_
-
-	// Byte 3
-	// Bit	Dec	Data Field
-	// 0	1	str file type (extension)
-	FileFmaskFileType
-	// 1	2	str video resolution
-	_
-	// 2	4	int4 video bitrate
-	_
-	// 3	8	str video codec
-	_
-	// 4	16	int4 audio bitrate list
-	_
-	// 5	32	str audio codec list
-	_
-	// 6	64	str source
-	_
-	// 7	128	str quality
-	_
-
-	// Byte 2
-	// Bit	Dec	Data Field
-	// 0	1	reserved
-	_
-	// 1	2	video colour depth
-	_
-	// 2	4	unused
-	_
-	// 3	8	str crc32
-	FileFmaskCRC32
-	// 4	16	str sha1
-	FileFmaskSHA1
-	// 5	32	str md5
-	FileFmaskMD5
-	// 6	64	str ed2k
-	FileFmaskED2k
-	// 7	128	int8 size
-	FileFmaskSize
-
-	// Byte 1
-	// Bit	Dec	Data Field
-	// 0	1	int2 state
-	FileFmaskState
-	// 1	2	int2 IsDeprecated
-	_
-	// 2	4	list other episodes
-	_
-	// 3	8	int4 mylist id
-	_
-	// 4	16	int4 gid
-	FileFmaskGID
-	// 5	32	int4 eid
-	FileFmaskEID
-	// 6	64	int4 aid
-	FileFmaskAID
-	// 7	128	unused
-	_
+import (
+	"fmt"
+	"strings"
 )
+
+type bitSpec struct{ byte, bit int }
+
+// A FileFmask is a mask for the FILE command fmask field.
+type FileFmask [5]byte
+
+var fileFmaskFields = map[string]bitSpec{
+	"aid":   {0, 6},
+	"eid":   {0, 5},
+	"gid":   {0, 4},
+	"state": {0, 0},
+
+	"anidb file name": {3, 0},
+}
+
+func (m *FileFmask) Set(f string) {
+	s, ok := fileFmaskFields[f]
+	if !ok {
+		panic(f)
+	}
+	m[s.byte] |= 1 << s.bit
+}
 
 // A FileAmask is a mask for the FILE command amask field.
-type FileAmask uint32
+type FileAmask [4]byte
 
-const (
-	// Byte 4
-	// Bit	Dec	Data Field
-	// 0	1	int4 date aid record updated
-	_ FileAmask = 1 << iota
-	// 1	2	unused
-	_
-	// 2	4	unused
-	_
-	// 3	8	unused
-	_
-	// 4	16	unused
-	_
-	// 5	32	unused
-	_
-	// 6	64	str group short name
-	_
-	// 7	128	str group name
-	FileAmaskGroupName
-
-	// Byte 3
-	// Bit	Dec	Data Field
-	// 0	1	unused
-	_
-	// 1	2	unused
-	_
-	// 2	4	int4 episode vote count
-	_
-	// 3	8	int4 episode rating
-	_
-	// 4	16	str ep kanji name
-	_
-	// 5	32	str ep romaji name
-	_
-	// 6	64	str ep name
-	_
-	// 7	128	str epno
-	FileAmaskEpno
-
-	// Byte 2
-	// Bit	Dec	Data Field
-	// 0	1	retired
-	_
-	// 1	2	retired
-	_
-	// 2	4	str synonym list
-	_
-	// 3	8	str short name list
-	_
-	// 4	16	str other name
-	_
-	// 5	32	str english name
-	_
-	// 6	64	str kanji name
-	_
-	// 7	128	str romaji name
-	_
-
-	// Byte 1
-	// Bit	Dec	Data Field
-	// 0	1	reserved
-	_
-	// 1	2	str category list
-	_
-	// 2	4	str related aid type
-	_
-	// 3	8	str related aid list
-	_
-	// 4	16	str type
-	FileAmaskType
-	// 5	32	str year
-	_
-	// 6	64	int4 highest episode number
-	_
-	// 7	128	int4 anime total episodes
-	_
-)
+func formatMask(m []byte) string {
+	var sb strings.Builder
+	for _, b := range m {
+		fmt.Fprintf(&sb, "%x", b)
+	}
+	return sb.String()
+}

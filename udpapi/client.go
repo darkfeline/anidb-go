@@ -184,8 +184,8 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 	}
 	v.Set("size", fmt.Sprintf("%d", size))
 	v.Set("ed2k", hash)
-	v.Set("fmask", fmt.Sprintf("%x", fmask))
-	v.Set("amask", fmt.Sprintf("%x", amask))
+	v.Set("fmask", formatMask(fmask[:]))
+	v.Set("amask", formatMask(amask[:]))
 	resp, err := c.m.Request(ctx, "FILE", v)
 	if err != nil {
 		return nil, err
