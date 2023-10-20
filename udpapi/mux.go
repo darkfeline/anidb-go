@@ -79,7 +79,7 @@ func NewMux(conn net.Conn) *Mux {
 // A Logger can be used for logging.
 // A Logger must be safe to use concurrently.
 type Logger interface {
-	Printf(string, ...interface{})
+	Printf(string, ...any)
 }
 
 // Request performs an AniDB UDP API request.
@@ -232,7 +232,7 @@ func (m *responseMap) cancel(t responseTag) {
 // close delivers empty bytes to all pending responses.
 // Doesn't handle any new pending responses created while close is running.
 func (m *responseMap) close() {
-	m.m.Range(func(key, value interface{}) bool {
+	m.m.Range(func(key, value any) bool {
 		m.deliver(key.(responseTag), nil)
 		return true
 	})
@@ -381,4 +381,4 @@ func unescapeField(s string) string {
 
 type nullLogger struct{}
 
-func (nullLogger) Printf(string, ...interface{}) {}
+func (nullLogger) Printf(string, ...any) {}
