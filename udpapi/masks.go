@@ -48,7 +48,10 @@ func (m *FileFmask) Set(f string) {
 type FileAmask [4]byte
 
 // FileAmaskFields describes the bit fields in a FILE amask.
-var FileAmaskFields = map[string]BitSpec{}
+var FileAmaskFields = map[string]BitSpec{
+	"epno":    {2, 7},
+	"ep name": {2, 6},
+}
 
 // Set sets a bit in the mask.
 func (m *FileAmask) Set(f string) {
