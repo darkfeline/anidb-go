@@ -56,7 +56,7 @@ type Client struct {
 func NewClient() (*Client, error) {
 	conn, err := net.Dial("udp", defaultServer)
 	if err != nil {
-		return nil, fmt.Errorf("udpapi: %w", err)
+		return nil, fmt.Errorf("udpapi NewClient: %w", err)
 	}
 	c := &Client{
 		conn:    conn,
@@ -100,14 +100,14 @@ type UserInfo struct {
 // Encrypt calls the ENCRYPT command.
 func (c *Client) Encrypt(ctx context.Context, u UserInfo) error {
 	if u.APIKey == "" {
-		return errors.New("udpapi: APIKey required for encryption")
+		return errors.New("udpapi encrypt: APIKey required for encryption")
 	}
 	v := url.Values{}
 	v.Set("user", u.UserName)
 	v.Set("type", "1")
 	resp, err := c.m.Request(ctx, "ENCRYPT", v)
 	if err != nil {
-		return err
+		return fmt.Errorf("udpapi Encrypt: %s", err)
 	}
 	switch resp.Code {
 	case 209:
@@ -116,12 +116,12 @@ func (c *Client) Encrypt(ctx context.Context, u UserInfo) error {
 		sum := md5.Sum([]byte(u.APIKey + salt))
 		b, err := aes.NewCipher(sum[:])
 		if err != nil {
-			return fmt.Errorf("udpapi: %s", err)
+			return fmt.Errorf("udpapi Encrypt: %s", err)
 		}
 		c.m.SetBlock(b)
 		return nil
 	default:
-		return fmt.Errorf("udpapi: bad code %d %q", resp.Code, resp.Header)
+		return fmt.Errorf("udpapi Encrypt: bad code %d %q", resp.Code, resp.Header)
 	}
 }
 
@@ -137,7 +137,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	v.Set("comp", "1")
 	resp, err := c.m.Request(ctx, "AUTH", v)
 	if err != nil {
-		return err
+		return fmt.Errorf("udpapi Auth: %s", err)
 	}
 	switch resp.Code {
 	case 201:
@@ -146,7 +146,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	case 200:
 		parts := strings.SplitN(resp.Header, " ", 3)
 		if len(parts) < 3 {
-			return fmt.Errorf("udpapi: invalid response header %q", resp.Header)
+			return fmt.Errorf("udpapi Auth: invalid response header %q", resp.Header)
 		}
 		c.sessionKeyMu.Lock()
 		c.sessionKey = parts[0]
@@ -157,7 +157,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("udpapi: bad code %d %q", resp.Code, resp.Header)
+		return fmt.Errorf("udpapi Auth: bad code %d %q", resp.Code, resp.Header)
 	}
 }
 
@@ -165,11 +165,11 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 func (c *Client) Logout(ctx context.Context) error {
 	v, err := c.sessionValues()
 	if err != nil {
-		return err
+		return fmt.Errorf("udpapi Logout: %s", err)
 	}
 	resp, err := c.m.Request(ctx, "LOGOUT", v)
 	if err != nil {
-		return err
+		return fmt.Errorf("udpapi Logout: %s", err)
 	}
 	c.m.SetBlock(nil)
 	c.sessionKeyMu.Lock()
@@ -179,7 +179,7 @@ func (c *Client) Logout(ctx context.Context) error {
 	case 203:
 		return nil
 	default:
-		return fmt.Errorf("udpapi: bad code %d %q", resp.Code, resp.Header)
+		return fmt.Errorf("udpapi Logout: bad code %d %q", resp.Code, resp.Header)
 	}
 }
 
@@ -187,7 +187,7 @@ func (c *Client) Logout(ctx context.Context) error {
 func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask FileFmask, amask FileAmask) ([]string, error) {
 	v, err := c.sessionValues()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("udpapi FileByHash: %s", err)
 	}
 	v.Set("size", fmt.Sprintf("%d", size))
 	v.Set("ed2k", hash)
@@ -195,13 +195,13 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 	v.Set("amask", formatMask(amask[:]))
 	resp, err := c.m.Request(ctx, "FILE", v)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("udpapi FileByHash: %s", err)
 	}
 	if resp.Code != 220 {
-		return nil, fmt.Errorf("udpapi: FileByHash got bad return code %s", resp.Code)
+		return nil, fmt.Errorf("udpapi FileByHash: got bad return code %s", resp.Code)
 	}
 	if n := len(resp.Rows); n != 1 {
-		return nil, fmt.Errorf("udpapi: FileByHash got unexpected number of rows %d", n)
+		return nil, fmt.Errorf("udpapi FileByHash: got unexpected number of rows %d", n)
 	}
 	return resp.Rows[0], nil
 }
@@ -210,21 +210,21 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 func (c *Client) Ping(ctx context.Context) (string, error) {
 	v, err := c.sessionValues()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("udpapi Ping: %s", err)
 	}
 	v.Set("nat", "1")
 	resp, err := c.m.Request(ctx, "PING", v)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("udpapi Ping: %s", err)
 	}
 	if resp.Code != 300 {
-		return "", fmt.Errorf("udpapi: Ping got bad return code %s", resp.Code)
+		return "", fmt.Errorf("udpapi Ping: got bad return code %s", resp.Code)
 	}
 	if n := len(resp.Rows); n != 1 {
-		return "", fmt.Errorf("udpapi: Ping got unexpected number of rows %d", n)
+		return "", fmt.Errorf("udpapi Ping: got unexpected number of rows %d", n)
 	}
 	if n := len(resp.Rows[0]); n != 1 {
-		return "", fmt.Errorf("udpapi: Ping got unexpected number of fields %d", n)
+		return "", fmt.Errorf("udpapi Ping: got unexpected number of fields %d", n)
 	}
 	return resp.Rows[0][0], nil
 }
@@ -235,7 +235,7 @@ func (c *Client) sessionValues() (url.Values, error) {
 	key := c.sessionKey
 	c.sessionKeyMu.Unlock()
 	if key == "" {
-		return nil, errors.New("udpapi: no session key (auth first)")
+		return nil, errors.New("no session key (auth first)")
 	}
 	v.Set("s", key)
 	return v, nil
