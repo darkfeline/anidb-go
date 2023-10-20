@@ -112,7 +112,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	m.Logger.Printf("Sending cmd %s", cmd)
 	// BUG(darkfeline): Network writes aren't governed by context deadlines.
 	if _, err := m.conn.Write(req); err != nil {
-		return Response{}, fmt.Errorf("udpapi: %w", err)
+		return Response{}, fmt.Errorf("mux request: %w", err)
 	}
 	select {
 	case <-ctx.Done():
@@ -120,7 +120,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	case d := <-c:
 		resp, err := parseResponse(d)
 		if err != nil {
-			return Response{}, fmt.Errorf("udpapi: %s", err)
+			return Response{}, fmt.Errorf("mux request: %s", err)
 		}
 		return resp, nil
 	}
