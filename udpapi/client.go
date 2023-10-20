@@ -72,10 +72,12 @@ func NewClient() (*Client, error) {
 // If nil, logging is disabled.
 func (c *Client) SetLogger(l Logger) {
 	if l == nil {
-		l = nullLogger{}
+		c.logger = nullLogger{}
+		c.m.Logger = nullLogger{}
+	} else {
+		c.logger = l
+		c.m.Logger = prefixLogger{prefix: "mux: ", logger: l}
 	}
-	c.logger = l
-	c.m.Logger = l
 }
 
 // Close closes the Client.

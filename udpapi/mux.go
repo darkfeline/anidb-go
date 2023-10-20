@@ -382,3 +382,12 @@ func unescapeField(s string) string {
 type nullLogger struct{}
 
 func (nullLogger) Printf(string, ...any) {}
+
+type prefixLogger struct {
+	prefix string
+	logger Logger
+}
+
+func (l prefixLogger) Printf(format string, v ...any) {
+	l.logger.Printf("%s"+format, append([]any{l.prefix}, v...))
+}
