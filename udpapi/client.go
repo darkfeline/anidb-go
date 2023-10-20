@@ -78,6 +78,9 @@ type ClientConfig struct {
 
 // Close closes the Client.
 // This does not call LOGOUT, so you should try to LOGOUT first.
+// The underlying connection is closed.
+// No new requests will be accepted (as the connection is closed).
+// Outstanding requests will be unblocked.
 func (c *Client) Close() {
 	// The connection is closed by the Mux.
 	c.m.Close()
