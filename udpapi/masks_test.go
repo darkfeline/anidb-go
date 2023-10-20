@@ -20,7 +20,17 @@ func TestFileFmask_Test(t *testing.T) {
 	t.Parallel()
 	var m FileFmask
 	m.Set("aid")
-	want := FileFmask{0b1000000, 0, 0, 0, 0}
+	want := FileFmask{0b100_0000, 0, 0, 0, 0}
+	if m != want {
+		t.Errorf("Got %v; want %v", m, want)
+	}
+}
+
+func TestFileAmask_Test(t *testing.T) {
+	t.Parallel()
+	var m FileAmask
+	m.Set("epno")
+	want := FileAmask{0, 0, 0b1000_0000, 0}
 	if m != want {
 		t.Errorf("Got %v; want %v", m, want)
 	}

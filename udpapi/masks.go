@@ -59,7 +59,7 @@ var FileAmaskFields = map[string]bitSpec{
 // Set sets a bit in the mask.
 func (m *FileAmask) Set(f ...string) {
 	for _, f := range f {
-		setMaskBit(m[:], FileFmaskFields, f)
+		setMaskBit(m[:], FileAmaskFields, f)
 	}
 }
 
