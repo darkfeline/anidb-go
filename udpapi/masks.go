@@ -41,8 +41,10 @@ var FileFmaskFields = map[string]bitSpec{
 }
 
 // Set sets a bit in the mask.
-func (m *FileFmask) Set(f string) {
-	setMaskBit(m[:], FileFmaskFields, f)
+func (m *FileFmask) Set(f ...string) {
+	for _, f := range f {
+		setMaskBit(m[:], FileFmaskFields, f)
+	}
 }
 
 // A FileAmask is a mask for the FILE command amask field.
@@ -55,8 +57,10 @@ var FileAmaskFields = map[string]bitSpec{
 }
 
 // Set sets a bit in the mask.
-func (m *FileAmask) Set(f string) {
-	setMaskBit(m[:], FileFmaskFields, f)
+func (m *FileAmask) Set(f ...string) {
+	for _, f := range f {
+		setMaskBit(m[:], FileFmaskFields, f)
+	}
 }
 
 func setMaskBit(b []byte, m map[string]bitSpec, name string) {
