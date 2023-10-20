@@ -19,8 +19,8 @@ import (
 	"strings"
 )
 
-// A BitSpec designates a bit in an API mask.
-type BitSpec struct {
+// A bitSpec designates a bit in an API mask.
+type bitSpec struct {
 	byte int
 	bit  int
 	typ  string
@@ -31,7 +31,7 @@ type BitSpec struct {
 type FileFmask [5]byte
 
 // FileFmaskFields describes the bit fields in a FILE fmask.
-var FileFmaskFields = map[string]BitSpec{
+var FileFmaskFields = map[string]bitSpec{
 	"aid":   {0, 6, "int4", "aid"},
 	"eid":   {0, 5, "int4", "eid"},
 	"gid":   {0, 4, "int4", "gid"},
@@ -53,7 +53,7 @@ func (m *FileFmask) Set(f string) {
 type FileAmask [4]byte
 
 // FileAmaskFields describes the bit fields in a FILE amask.
-var FileAmaskFields = map[string]BitSpec{
+var FileAmaskFields = map[string]bitSpec{
 	"epno":    {2, 7, "str", "epno"},
 	"ep name": {2, 6, "str", "ep name"},
 }
