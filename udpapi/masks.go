@@ -42,11 +42,7 @@ var FileFmaskFields = map[string]bitSpec{
 
 // Set sets a bit in the mask.
 func (m *FileFmask) Set(f string) {
-	s, ok := FileFmaskFields[f]
-	if !ok {
-		panic(f)
-	}
-	m[s.byte] |= 1 << s.bit
+	setMaskBit(m[:], FileFmaskFields, f)
 }
 
 // A FileAmask is a mask for the FILE command amask field.
@@ -60,11 +56,15 @@ var FileAmaskFields = map[string]bitSpec{
 
 // Set sets a bit in the mask.
 func (m *FileAmask) Set(f string) {
-	s, ok := FileAmaskFields[f]
+	setMaskBit(m[:], FileFmaskFields, f)
+}
+
+func setMaskBit(b []byte, m map[string]bitSpec, name string) {
+	s, ok := m[name]
 	if !ok {
-		panic(f)
+		panic(name)
 	}
-	m[s.byte] |= 1 << s.bit
+	b[s.byte] |= 1 << s.bit
 }
 
 func formatMask(m []byte) string {
