@@ -20,19 +20,19 @@ import (
 )
 
 // A BitSpec designates a bit in an API mask.
-type BitSpec struct{ byte, bit int }
+type BitSpec struct{ byte, bit int, typ string }
 
 // A FileFmask is a mask for the FILE command fmask field.
 type FileFmask [5]byte
 
 // FileFmaskFields describes the bit fields in a FILE fmask.
 var FileFmaskFields = map[string]BitSpec{
-	"aid":   {0, 6},
-	"eid":   {0, 5},
-	"gid":   {0, 4},
-	"state": {0, 0},
+	"aid":   {0, 6, "int4"},
+	"eid":   {0, 5, "int4"},
+	"gid":   {0, 4, "int4"},
+	"state": {0, 0, "int2"},
 
-	"anidb file name": {3, 0},
+	"anidb file name": {3, 0, "str"},
 }
 
 // Set sets a bit in the mask.
@@ -49,8 +49,8 @@ type FileAmask [4]byte
 
 // FileAmaskFields describes the bit fields in a FILE amask.
 var FileAmaskFields = map[string]BitSpec{
-	"epno":    {2, 7},
-	"ep name": {2, 6},
+	"epno":    {2, 7, "str"},
+	"ep name": {2, 6, "str"},
 }
 
 // Set sets a bit in the mask.
