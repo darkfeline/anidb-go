@@ -44,7 +44,7 @@ import (
 //
 // Multiple goroutines may invoke methods on a Mux simultaneously.
 type Mux struct {
-	Logger Logger
+	Logger Logger // must be non-nil
 
 	// Concurrency safe
 	wg         sync.WaitGroup
