@@ -53,7 +53,7 @@ type Client struct {
 // NewClient creates a new Client.
 // ClientConfig must not be nil.
 // The caller should set ClientName and ClientVersion on the returned Client.
-func NewClient(cfg *ClientConfig) (*Client, error) {
+func NewClient() (*Client, error) {
 	conn, err := net.Dial("udp", defaultServer)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi: %w", err)
@@ -62,18 +62,20 @@ func NewClient(cfg *ClientConfig) (*Client, error) {
 		conn:    conn,
 		m:       NewMux(conn),
 		limiter: newLimiter(),
-		logger:  cfg.Logger,
 	}
-	if c.logger == nil {
-		c.logger = nullLogger{}
-	}
+	// Initialize logger, as it must be non-nil.
+	c.SetLogger(nil)
 	return c, nil
 }
 
-// A ClientConfig is passed to NewClient for configuration.
-type ClientConfig struct {
-	// Logger for logging.  If nil, logging is disabled.
-	Logger Logger
+// SetLogger sets the logger for the client.
+// If nil, logging is disabled.
+func (c *Client) SetLogger(l Logger) {
+	if l == nil {
+		l = nullLogger{}
+	}
+	c.logger = l
+	c.m.Logger = l
 }
 
 // Close closes the Client.
