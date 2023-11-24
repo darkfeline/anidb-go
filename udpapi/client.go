@@ -228,7 +228,7 @@ func (c *Client) request(ctx context.Context, cmd string, args url.Values) (Resp
 
 // sessionValues returns the values to use for the current session.
 func (c *Client) sessionValues() (url.Values, error) {
-	v := url.Values{}
+	v := make(url.Values)
 	key := c.sessionKey.get()
 	if key == "" {
 		return nil, errors.New("no session key (log in with AUTH first)")
