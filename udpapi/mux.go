@@ -117,6 +117,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	case <-ctx.Done():
 		return Response{}, ctx.Err()
 	case d := <-c:
+		m.Logger.Printf("Got response for cmd %s", cmd)
 		resp, err := parseResponse(d)
 		if err != nil {
 			return Response{}, fmt.Errorf("mux request: %s", err)
