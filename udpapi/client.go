@@ -122,7 +122,7 @@ func (c *Client) Encrypt(ctx context.Context, u UserInfo) error {
 }
 
 // Auth calls the AUTH command.
-func (c *Client) Auth(ctx context.Context, u UserInfo) error {
+func (c *Client) Auth(ctx context.Context, u UserInfo) (port string, _ error) {
 	v := url.Values{}
 	v.Set("user", u.UserName)
 	v.Set("pass", u.UserPassword)
@@ -133,7 +133,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	v.Set("comp", "1")
 	resp, err := c.request(ctx, "AUTH", v)
 	if err != nil {
-		return fmt.Errorf("udpapi Auth: %s", err)
+		return "", fmt.Errorf("udpapi Auth: %s", err)
 	}
 	switch resp.Code {
 	case 201:
@@ -142,16 +142,12 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	case 200:
 		parts := strings.SplitN(resp.Header, " ", 3)
 		if len(parts) < 3 {
-			return fmt.Errorf("udpapi Auth: invalid response header %q", resp.Header)
+			return 0, fmt.Errorf("udpapi Auth: invalid response header %q", resp.Header)
 		}
 		c.sessionKey.set(parts[0])
-		// TODO Support different IP formats, e.g. short forms
-		if our := c.conn.LocalAddr().String(); our != parts[1] {
-			// TODO Detected NAT, need to keepalive
-		}
-		return nil
+		return parts[1], nil
 	default:
-		return fmt.Errorf("udpapi Auth: bad code %d %q", resp.Code, resp.Header)
+		return "", fmt.Errorf("udpapi Auth: bad code %d %q", resp.Code, resp.Header)
 	}
 }
 
