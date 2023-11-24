@@ -208,6 +208,9 @@ type responseMap struct {
 	logger Logger // must be non-nil
 }
 
+// waitFor registers a response tag.
+// The caller must ensure that [responseMap.cancel] is called so the
+// tag isn't leaked.
 func (m *responseMap) waitFor(t responseTag) <-chan []byte {
 	c := make(chan []byte, 1)
 	_, loaded := m.m.LoadOrStore(t, c)
