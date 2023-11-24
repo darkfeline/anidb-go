@@ -40,8 +40,7 @@ type Client struct {
 	limiter *limiter
 	logger  Logger
 
-	sessionKeyMu sync.Mutex
-	sessionKey   string
+	sessionKey syncVar[string]
 
 	ClientName    string
 	ClientVersion int32
@@ -145,9 +144,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 		if len(parts) < 3 {
 			return fmt.Errorf("udpapi Auth: invalid response header %q", resp.Header)
 		}
-		c.sessionKeyMu.Lock()
-		c.sessionKey = parts[0]
-		c.sessionKeyMu.Unlock()
+		c.sessionKey.set(parts[0])
 		// TODO Support different IP formats, e.g. short forms
 		if our := c.conn.LocalAddr().String(); our != parts[1] {
 			// TODO Detected NAT, need to keepalive
@@ -169,9 +166,7 @@ func (c *Client) Logout(ctx context.Context) error {
 		return fmt.Errorf("udpapi Logout: %s", err)
 	}
 	c.m.SetBlock(nil)
-	c.sessionKeyMu.Lock()
-	c.sessionKey = ""
-	c.sessionKeyMu.Unlock()
+	c.sessionKey.set("")
 	switch resp.Code {
 	case 203:
 		return nil
@@ -237,12 +232,28 @@ func (c *Client) request(ctx context.Context, cmd string, args url.Values) (Resp
 // sessionValues returns the values to use for the current session.
 func (c *Client) sessionValues() (url.Values, error) {
 	v := url.Values{}
-	c.sessionKeyMu.Lock()
-	key := c.sessionKey
-	c.sessionKeyMu.Unlock()
+	key := c.sessionKey.get()
 	if key == "" {
 		return nil, errors.New("no session key (log in with AUTH first)")
 	}
 	v.Set("s", key)
 	return v, nil
+}
+
+type syncVar[T any] struct {
+	val T
+	mu  sync.Mutex
+}
+
+func (s *syncVar[T]) get() T {
+	s.mu.Lock()
+	v := s.val
+	s.mu.Unlock()
+	return v
+}
+
+func (s *syncVar[T]) set(v T) {
+	s.mu.Lock()
+	s.val = v
+	s.mu.Unlock()
 }
