@@ -83,7 +83,7 @@ type Logger interface {
 }
 
 // Request performs an AniDB UDP API request.
-// args is modified by setting a new tag.
+// args is modified; this method sets a new request tag.
 //
 // This method DOES NOT handle retries or rate limiting.
 //
