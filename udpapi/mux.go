@@ -247,7 +247,7 @@ type responseTag string
 // This is concurrency safe.
 type tagCounter struct {
 	mu sync.Mutex
-	c  int
+	c  uint
 }
 
 func (c *tagCounter) next() responseTag {
