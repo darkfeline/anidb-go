@@ -22,6 +22,9 @@ import (
 
 // A Limiter is a rate limiter that complies with AniDB UDP API flood
 // prevention recommendations.
+//
+// It functions similarly to [golang.org/x/time/rate.Limiter], except
+// with both short and long term limits.
 type limiter struct {
 	short *rate.Limiter
 	long  *rate.Limiter
