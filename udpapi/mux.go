@@ -32,6 +32,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"go.felesatra.moe/anidb/udpapi/codes"
 )
 
 // A Mux multiplexes AniDB UDP API requests on a single connection.
@@ -271,7 +273,7 @@ func splitTag(b []byte) (responseTag, []byte) {
 
 // A Response is an AniDB UDP API response.
 type Response struct {
-	Code   ReturnCode
+	Code   codes.ReturnCode
 	Header string
 	Rows   [][]string
 }
@@ -286,7 +288,7 @@ func parseResponse(b []byte) (Response, error) {
 	if err != nil {
 		return r, fmt.Errorf("parse response: %s", err)
 	}
-	r.Code = ReturnCode(code)
+	r.Code = codes.ReturnCode(code)
 	if len(parts) > 1 {
 		r.Header = parts[1]
 	}
@@ -301,31 +303,6 @@ func parseResponse(b []byte) (Response, error) {
 		r.Rows = append(r.Rows, row)
 	}
 	return r, nil
-}
-
-// A ReturnCode is an AniDB UDP API return code.
-// Note that even though ReturnCode implements error, not all ReturnCode values should be
-// considered errors.
-type ReturnCode int
-
-const (
-	LoginFirst     ReturnCode = 501 // 501 LOGIN_FIRST
-	AccessDenied   ReturnCode = 502 // 502 ACCESS_DENIED
-	ClientBanned   ReturnCode = 504 // 504 CLIENT_BANNED
-	IllegalInput   ReturnCode = 505 // 505 ILLEGAL_INPUT_OR_ACCESS_DENIED
-	InvalidSession ReturnCode = 506 // 506 INVALID_SESSION
-	Banned         ReturnCode = 555 // 555 BANNED
-	UnknownCmd     ReturnCode = 598 // 598 UNKNOWN_COMMAND
-	InternalErr    ReturnCode = 600 // 600 INTERNAL_SERVER_ERROR
-	OutOfService   ReturnCode = 601 // 601 ANIDB_OUT_OF_SERVICE
-	ServerBusy     ReturnCode = 602 // 602 SERVER_BUSY
-	Timeout        ReturnCode = 604 // 604 TIMEOUT - DELAY AND RESUBMIT
-)
-
-//go:generate stringer -type=ReturnCode -linecomment
-
-func (c ReturnCode) Error() string {
-	return c.String()
 }
 
 // DEFLATE
