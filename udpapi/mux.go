@@ -100,7 +100,6 @@ type Logger interface {
 func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Response, error) {
 	ctx, cf := context.WithTimeout(ctx, 5*time.Second)
 	defer cf()
-	m.Logger.Printf("Starting request cmd %s", cmd)
 	t := m.tagCounter.next()
 	args.Set("tag", string(t))
 	req := []byte(cmd + " " + args.Encode())
@@ -109,7 +108,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	}
 	c := m.responses.waitFor(t)
 	defer m.responses.cancel(t)
-	m.Logger.Printf("Sending cmd %s", cmd)
+	m.Logger.Printf("Sending request cmd %s", cmd)
 	// BUG(darkfeline): Network writes aren't governed by context deadlines.
 	if _, err := m.conn.Write(req); err != nil {
 		return Response{}, fmt.Errorf("mux request: %w", err)
