@@ -236,6 +236,7 @@ func (c *Client) request(ctx context.Context, cmd string, args url.Values) (Resp
 	return c.m.Request(ctx, cmd, args)
 }
 
+// sessionValues returns the values to use for the current session.
 func (c *Client) sessionValues() (url.Values, error) {
 	v := url.Values{}
 	c.sessionKeyMu.Lock()
