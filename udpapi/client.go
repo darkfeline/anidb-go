@@ -28,7 +28,6 @@ import (
 )
 
 const protoVer = "3"
-const defaultServer = "api.anidb.net:9000"
 
 // A Client is an AniDB UDP API client.
 //
@@ -53,8 +52,8 @@ type Client struct {
 // NewClient creates a new Client.
 // ClientConfig must not be nil.
 // The caller should set ClientName and ClientVersion on the returned Client.
-func NewClient() (*Client, error) {
-	conn, err := net.Dial("udp", defaultServer)
+func NewClient(addr string) (*Client, error) {
+	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi NewClient: %w", err)
 	}
