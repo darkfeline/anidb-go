@@ -14,7 +14,7 @@
 
 // Package titles provides a cache for AniDB titles data.
 //
-// This package is deprecated as go.felesatra.moe/anidb now provides a
+// This package is deprecated as [go.felesatra.moe/anidb] now provides a
 // titles cache.
 package titles
 
