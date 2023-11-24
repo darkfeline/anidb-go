@@ -10,6 +10,7 @@ func _() {
 	var x [1]struct{}
 	_ = x[LoginFirst-501]
 	_ = x[AccessDenied-502]
+	_ = x[ClientBanned-504]
 	_ = x[IllegalInput-505]
 	_ = x[InvalidSession-506]
 	_ = x[Banned-555]
@@ -22,7 +23,7 @@ func _() {
 
 const (
 	_ReturnCode_name_0 = "501 LOGIN_FIRST502 ACCESS_DENIED"
-	_ReturnCode_name_1 = "505 ILLEGAL_INPUT_OR_ACCESS_DENIED506 INVALID_SESSION"
+	_ReturnCode_name_1 = "504 CLIENT_BANNED505 ILLEGAL_INPUT_OR_ACCESS_DENIED506 INVALID_SESSION"
 	_ReturnCode_name_2 = "555 BANNED"
 	_ReturnCode_name_3 = "598 UNKNOWN_COMMAND"
 	_ReturnCode_name_4 = "600 INTERNAL_SERVER_ERROR601 ANIDB_OUT_OF_SERVICE602 SERVER_BUSY"
@@ -31,7 +32,7 @@ const (
 
 var (
 	_ReturnCode_index_0 = [...]uint8{0, 15, 32}
-	_ReturnCode_index_1 = [...]uint8{0, 34, 53}
+	_ReturnCode_index_1 = [...]uint8{0, 17, 51, 70}
 	_ReturnCode_index_4 = [...]uint8{0, 25, 49, 64}
 )
 
@@ -40,8 +41,8 @@ func (i ReturnCode) String() string {
 	case 501 <= i && i <= 502:
 		i -= 501
 		return _ReturnCode_name_0[_ReturnCode_index_0[i]:_ReturnCode_index_0[i+1]]
-	case 505 <= i && i <= 506:
-		i -= 505
+	case 504 <= i && i <= 506:
+		i -= 504
 		return _ReturnCode_name_1[_ReturnCode_index_1[i]:_ReturnCode_index_1[i+1]]
 	case i == 555:
 		return _ReturnCode_name_2

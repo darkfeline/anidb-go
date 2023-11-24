@@ -311,6 +311,7 @@ type ReturnCode int
 const (
 	LoginFirst     ReturnCode = 501 // 501 LOGIN_FIRST
 	AccessDenied   ReturnCode = 502 // 502 ACCESS_DENIED
+	ClientBanned   ReturnCode = 504 // 504 CLIENT_BANNED
 	IllegalInput   ReturnCode = 505 // 505 ILLEGAL_INPUT_OR_ACCESS_DENIED
 	InvalidSession ReturnCode = 506 // 506 INVALID_SESSION
 	Banned         ReturnCode = 555 // 555 BANNED
