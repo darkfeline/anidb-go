@@ -142,7 +142,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) (port string, _ error) {
 	case 200:
 		parts := strings.SplitN(resp.Header, " ", 3)
 		if len(parts) < 3 {
-			return 0, fmt.Errorf("udpapi Auth: invalid response header %q", resp.Header)
+			return "", fmt.Errorf("udpapi Auth: invalid response header %q", resp.Header)
 		}
 		c.sessionKey.set(parts[0])
 		return parts[1], nil
