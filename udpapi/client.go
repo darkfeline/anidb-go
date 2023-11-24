@@ -243,7 +243,7 @@ func (c *Client) sessionValues() (url.Values, error) {
 	key := c.sessionKey
 	c.sessionKeyMu.Unlock()
 	if key == "" {
-		return nil, errors.New("no session key (auth first)")
+		return nil, errors.New("no session key (log in with AUTH first)")
 	}
 	v.Set("s", key)
 	return v, nil
