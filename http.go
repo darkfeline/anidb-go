@@ -36,7 +36,7 @@ type Client struct {
 }
 
 // A Limiter implements rate limiting.
-// The golang.org/x/time/rate package provides an implementation.
+// [golang.org/x/time/rate.Limiter] is a valid implementation.
 type Limiter interface {
 	Wait(context.Context) error
 }
