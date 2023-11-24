@@ -203,7 +203,7 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 	return resp.Rows[0], nil
 }
 
-// Ping calls the PING command.
+// Ping calls the PING command with nat=1 and returns the port.
 func (c *Client) Ping(ctx context.Context) (string, error) {
 	v, err := c.sessionValues()
 	if err != nil {
