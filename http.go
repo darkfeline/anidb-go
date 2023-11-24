@@ -25,6 +25,8 @@ import (
 	"time"
 )
 
+const protoVer = "1"
+
 // A Client is a client for the AniDB HTTP API.
 // Read the AniDB API documentation about registering a client.
 type Client struct {
@@ -74,7 +76,7 @@ func (c *Client) apiRequestURL(params map[string]string) string {
 	vals := url.Values{}
 	vals.Set("client", c.Name)
 	vals.Set("clientver", strconv.Itoa(c.Version))
-	vals.Set("protover", "1")
+	vals.Set("protover", protoVer)
 	for k, v := range params {
 		vals.Set(k, v)
 	}
