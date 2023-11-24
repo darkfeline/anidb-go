@@ -104,7 +104,7 @@ func (c *Client) Encrypt(ctx context.Context, u UserInfo) error {
 	v := url.Values{}
 	v.Set("user", u.UserName)
 	v.Set("type", "1")
-	resp, err := c.m.Request(ctx, "ENCRYPT", v)
+	resp, err := c.request(ctx, "ENCRYPT", v)
 	if err != nil {
 		return fmt.Errorf("udpapi Encrypt: %s", err)
 	}
@@ -134,7 +134,7 @@ func (c *Client) Auth(ctx context.Context, u UserInfo) error {
 	v.Set("clientver", strconv.Itoa(int(c.ClientVersion)))
 	v.Set("nat", "1")
 	v.Set("comp", "1")
-	resp, err := c.m.Request(ctx, "AUTH", v)
+	resp, err := c.request(ctx, "AUTH", v)
 	if err != nil {
 		return fmt.Errorf("udpapi Auth: %s", err)
 	}
@@ -166,7 +166,7 @@ func (c *Client) Logout(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("udpapi Logout: %s", err)
 	}
-	resp, err := c.m.Request(ctx, "LOGOUT", v)
+	resp, err := c.request(ctx, "LOGOUT", v)
 	if err != nil {
 		return fmt.Errorf("udpapi Logout: %s", err)
 	}
@@ -192,7 +192,7 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 	v.Set("ed2k", hash)
 	v.Set("fmask", formatMask(fmask[:]))
 	v.Set("amask", formatMask(amask[:]))
-	resp, err := c.m.Request(ctx, "FILE", v)
+	resp, err := c.request(ctx, "FILE", v)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi FileByHash: %s", err)
 	}
@@ -212,7 +212,7 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("udpapi Ping: %s", err)
 	}
 	v.Set("nat", "1")
-	resp, err := c.m.Request(ctx, "PING", v)
+	resp, err := c.request(ctx, "PING", v)
 	if err != nil {
 		return "", fmt.Errorf("udpapi Ping: %s", err)
 	}
@@ -226,6 +226,14 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("udpapi Ping: got unexpected number of fields %d", n)
 	}
 	return resp.Rows[0][0], nil
+}
+
+// request sends a request to the underlying mux, with rate limiting.
+func (c *Client) request(ctx context.Context, cmd string, args url.Values) (Response, error) {
+	if err := c.limiter.Wait(ctx); err != nil {
+		return Response{}, err
+	}
+	return c.m.Request(ctx, cmd, args)
 }
 
 func (c *Client) sessionValues() (url.Values, error) {
