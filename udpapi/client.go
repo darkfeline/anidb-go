@@ -200,10 +200,7 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 
 // Ping calls the PING command with nat=1 and returns the port.
 func (c *Client) Ping(ctx context.Context) (string, error) {
-	v, err := c.sessionValues()
-	if err != nil {
-		return "", fmt.Errorf("udpapi Ping: %s", err)
-	}
+	v := make(url.Values)
 	v.Set("nat", "1")
 	resp, err := c.request(ctx, "PING", v)
 	if err != nil {
