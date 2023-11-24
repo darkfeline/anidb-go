@@ -218,6 +218,32 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 	return resp.Rows[0][0], nil
 }
 
+// Uptime calls the UPTIME command and returns server uptime in milliseconds.
+func (c *Client) Uptime(ctx context.Context) (int, error) {
+	v, err := c.sessionValues()
+	if err != nil {
+		return 0, fmt.Errorf("udpapi Uptime: %s", err)
+	}
+	resp, err := c.request(ctx, "UPTIME", v)
+	if err != nil {
+		return 0, fmt.Errorf("udpapi Uptime: %s", err)
+	}
+	if resp.Code != 208 {
+		return 0, fmt.Errorf("udpapi Uptime: got bad return code %s", resp.Code)
+	}
+	if n := len(resp.Rows); n != 1 {
+		return 0, fmt.Errorf("udpapi Uptime: got unexpected number of rows %d", n)
+	}
+	if n := len(resp.Rows[0]); n != 1 {
+		return 0, fmt.Errorf("udpapi Uptime: got unexpected number of fields %d", n)
+	}
+	time, err := strconv.Atoi(resp.Rows[0][0])
+	if err != nil {
+		return 0, fmt.Errorf("udpapi Uptime: %s", err)
+	}
+	return time, nil
+}
+
 // request sends a request to the underlying mux, with rate limiting.
 func (c *Client) request(ctx context.Context, cmd string, args url.Values) (Response, error) {
 	if err := c.limiter.Wait(ctx); err != nil {
