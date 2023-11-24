@@ -110,7 +110,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	c := m.responses.waitFor(t)
 	defer m.responses.cancel(t)
 	m.Logger.Printf("Sending request cmd %s", cmd)
-	// BUG(darkfeline): Network writes aren't governed by context deadlines.
+	// Network writes aren't governed by context deadlines.
 	if _, err := m.conn.Write(req); err != nil {
 		return Response{}, fmt.Errorf("mux request: %w", err)
 	}
