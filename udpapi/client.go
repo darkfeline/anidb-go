@@ -31,11 +31,9 @@ const protoVer = "3"
 
 // A Client is an AniDB UDP API client.
 //
-// The client handles basic rate limiting.
-// The client does not handle retries or most errors.
-//
-// Due to the complexity of correctly using the UDP API, there may be
-// bugs and/or feature gaps.
+// The client handles rate limiting.
+// The client does not handle retries.
+// The client does not handle keepalive.
 type Client struct {
 	conn    net.Conn
 	m       *Mux
