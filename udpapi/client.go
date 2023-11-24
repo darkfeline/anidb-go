@@ -199,7 +199,7 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 }
 
 // Ping calls the PING command with nat=1 and returns the port.
-func (c *Client) Ping(ctx context.Context) (string, error) {
+func (c *Client) Ping(ctx context.Context) (port string, _ error) {
 	v := make(url.Values)
 	v.Set("nat", "1")
 	resp, err := c.request(ctx, "PING", v)
@@ -219,7 +219,7 @@ func (c *Client) Ping(ctx context.Context) (string, error) {
 }
 
 // Uptime calls the UPTIME command and returns server uptime in milliseconds.
-func (c *Client) Uptime(ctx context.Context) (int, error) {
+func (c *Client) Uptime(ctx context.Context) (uptime int, _ error) {
 	v, err := c.sessionValues()
 	if err != nil {
 		return 0, fmt.Errorf("udpapi Uptime: %s", err)
