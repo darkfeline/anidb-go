@@ -76,6 +76,17 @@ func (c *Client) SetLogger(l Logger) {
 	}
 }
 
+// LocalPort returns the local port for the client connection.
+// This is useful for detecting NAT.
+func (c *Client) LocalPort() string {
+	addr := c.conn.LocalAddr().String()
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		panic(err)
+	}
+	return port
+}
+
 // Close closes the Client.
 // This does not call LOGOUT, so you should try to LOGOUT first.
 // The underlying connection is closed.
