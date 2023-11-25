@@ -14,21 +14,30 @@
 
 package udpapi
 
-// A Logger can be used for logging.
-// A Logger must be safe to use concurrently.
-type Logger interface {
-	Printf(string, ...any)
+import (
+	"fmt"
+	"testing"
+)
+
+func TestPrefixLogger(t *testing.T) {
+	t.Parallel()
+	var s spyLogger
+	p := prefixLogger{
+		prefix: "mika:",
+		logger: &s,
+	}
+	p.Printf("%s %s", "azusa", "hifumi")
+	got := s.msg
+	const want = "mika:azusa hifumi"
+	if got != want {
+		t.Errorf("got log message %q; want %q", got, want)
+	}
 }
 
-type nullLogger struct{}
-
-func (nullLogger) Printf(string, ...any) {}
-
-type prefixLogger struct {
-	prefix string
-	logger Logger
+type spyLogger struct {
+	msg string
 }
 
-func (l prefixLogger) Printf(format string, a ...any) {
-	l.logger.Printf("%s"+format, append([]any{l.prefix}, a...)...)
+func (l *spyLogger) Printf(format string, a ...any) {
+	l.msg = fmt.Sprintf(format, a...)
 }
