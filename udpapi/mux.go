@@ -78,12 +78,6 @@ func NewMux(conn net.Conn) *Mux {
 	return m
 }
 
-// A Logger can be used for logging.
-// A Logger must be safe to use concurrently.
-type Logger interface {
-	Printf(string, ...any)
-}
-
 // Request performs an AniDB UDP API request.
 // args is modified; this method sets a new request tag.
 //
@@ -359,18 +353,4 @@ func unescapeField(s string) string {
 	s = strings.ReplaceAll(s, "`", "'")
 	s = strings.ReplaceAll(s, "/", "|")
 	return s
-}
-
-type nullLogger struct{}
-
-func (nullLogger) Printf(string, ...any) {}
-
-type prefixLogger struct {
-	prefix string
-	logger Logger
-}
-
-func (l prefixLogger) Printf(format string, v ...any) {
-	msg := fmt.Sprintf(format, v...)
-	l.logger.Printf("%s%s", l.prefix, msg)
 }
