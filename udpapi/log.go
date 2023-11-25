@@ -30,5 +30,8 @@ type prefixLogger struct {
 }
 
 func (l prefixLogger) Printf(format string, a ...any) {
-	l.logger.Printf("%s"+format, append([]any{l.prefix}, a...)...)
+	a2 := make([]any, len(a)+1)
+	a2[0] = l.prefix
+	copy(a2[1:], a)
+	l.logger.Printf("%s"+format, a2...)
 }
