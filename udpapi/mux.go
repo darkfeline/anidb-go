@@ -48,17 +48,13 @@ import (
 type Mux struct {
 	Logger Logger // must be non-nil
 
-	// Concurrency safe
 	wg         sync.WaitGroup
 	responses  responseMap
 	tagCounter tagCounter
+	block      syncVar[cipher.Block]
 
 	// Set on init
 	conn net.Conn
-
-	// Mutex protected
-	block   cipher.Block
-	blockMu sync.Mutex
 }
 
 // NewMux makes a new Mux.
@@ -100,7 +96,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	t := m.tagCounter.next()
 	args.Set("tag", string(t))
 	req := []byte(cmd + " " + args.Encode())
-	if b := m.getBlock(); b != nil {
+	if b := m.block.get(); b != nil {
 		req = encrypt(b, req)
 	}
 	c := m.responses.waitFor(t)
@@ -126,9 +122,7 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 //
 // See the AniDB UDP API documentation for more information.
 func (m *Mux) SetBlock(b cipher.Block) {
-	m.blockMu.Lock()
-	m.block = b
-	m.blockMu.Unlock()
+	m.block.set(b)
 }
 
 // Close immediately closes the Mux.
@@ -163,7 +157,7 @@ func (m *Mux) handleResponses() {
 // handleResponseData handles one incoming response packet.
 // Does decryption and decompression, as it is needed to match the response tag.
 func (m *Mux) handleResponseData(data []byte) {
-	if b := m.getBlock(); b != nil {
+	if b := m.block.get(); b != nil {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
@@ -180,12 +174,6 @@ func (m *Mux) handleResponseData(data []byte) {
 		}
 	}
 	m.responses.deliver(splitTag(data))
-}
-
-func (m *Mux) getBlock() cipher.Block {
-	m.blockMu.Lock()
-	defer m.blockMu.Unlock()
-	return m.block
 }
 
 // A responseMap tracks pending UDP responses by tag, so they can be
