@@ -105,7 +105,6 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	}
 	c := m.responses.waitFor(t)
 	defer m.responses.cancel(t)
-	m.Logger.Printf("Sending request cmd %s", cmd)
 	// Network writes aren't governed by context deadlines.
 	if _, err := m.conn.Write(req); err != nil {
 		return Response{}, fmt.Errorf("mux request: %w", err)
@@ -114,7 +113,6 @@ func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Respons
 	case <-ctx.Done():
 		return Response{}, ctx.Err()
 	case d := <-c:
-		m.Logger.Printf("Got response for cmd %s", cmd)
 		resp, err := parseResponse(d)
 		if err != nil {
 			return Response{}, fmt.Errorf("mux request: %s", err)
