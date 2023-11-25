@@ -45,10 +45,10 @@ type Client struct {
 	ClientVersion int32
 }
 
-// NewClient creates a new Client.
+// Dial connects to an AniDB UDP API server.
 // ClientConfig must not be nil.
 // The caller should set ClientName and ClientVersion on the returned Client.
-func NewClient(addr string) (*Client, error) {
+func Dial(addr string) (*Client, error) {
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi NewClient: %w", err)
