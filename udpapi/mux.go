@@ -36,17 +36,26 @@ import (
 	"go.felesatra.moe/anidb/udpapi/codes"
 )
 
-// A Mux multiplexes AniDB UDP API requests on a single connection.
+// A Mux multiplexes AniDB UDP API requests and responses on a single
+// connection.
 //
-// Mux basically handles the response tag in the UDP API which allows
+// Mux is a low level API; try [Client] first.
+//
+// Mux handles the response tag in the UDP API which allows
 // asynchronous, simultaneous requests, as well as decompression and
 // decryption, as those are necessary to read the response tag.
 //
-// Mux is a low level API; try Client first.
-//
-// Multiple goroutines may invoke methods on a Mux simultaneously.
+// The methods can be called concurrently.
 type Mux struct {
-	Logger Logger // must be non-nil
+	// Logger is used for logging.
+	//
+	// A Mux may encounter errors asynchronously; thus it is
+	// recommended to set Logger so errors can be seen.
+	//
+	// [NewMux] initializes this to a no-op value.
+	//
+	// This must be non-nil.
+	Logger Logger
 
 	wg         sync.WaitGroup
 	responses  responseMap
