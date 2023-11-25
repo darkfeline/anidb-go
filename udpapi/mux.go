@@ -157,9 +157,10 @@ func (m *Mux) handleResponses() {
 			}
 			var err net.Error
 			if errors.As(readErr, &err) && !err.Temporary() {
+				m.Logger.Printf("Non-temporary network error reading from UDP conn: %s", err)
 				return
 			}
-			m.Logger.Printf("Error reading from UDP conn: %s", readErr)
+			m.Logger.Printf("Unknown error reading from UDP conn: %s", readErr)
 		}
 	}
 }
