@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 const protoVer = "3"
@@ -268,22 +267,4 @@ func (c *Client) sessionValues() (url.Values, error) {
 	}
 	v.Set("s", key)
 	return v, nil
-}
-
-type syncVar[T any] struct {
-	val T
-	mu  sync.Mutex
-}
-
-func (s *syncVar[T]) get() T {
-	s.mu.Lock()
-	v := s.val
-	s.mu.Unlock()
-	return v
-}
-
-func (s *syncVar[T]) set(v T) {
-	s.mu.Lock()
-	s.val = v
-	s.mu.Unlock()
 }
