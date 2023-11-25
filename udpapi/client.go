@@ -46,8 +46,9 @@ type Client struct {
 }
 
 // Dial connects to an AniDB UDP API server.
-// ClientConfig must not be nil.
 // The caller should set ClientName and ClientVersion on the returned Client.
+// The caller should call [Client.SetLogger] as the client may produce
+// asynchronous errors.
 func Dial(addr string) (*Client, error) {
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
