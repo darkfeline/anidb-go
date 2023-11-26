@@ -34,6 +34,25 @@ func TestPrefixLogger(t *testing.T) {
 	}
 }
 
+func TestPrefixLogger_nested(t *testing.T) {
+	t.Parallel()
+	var s spyLogger
+	p := prefixLogger{
+		prefix: "outer:",
+		logger: &s,
+	}
+	p = prefixLogger{
+		prefix: "inner:",
+		logger: p,
+	}
+	p.Printf("%s %s", "azusa", "hifumi")
+	got := s.msg
+	const want = "outer:inner:azusa hifumi"
+	if got != want {
+		t.Errorf("got log message %q; want %q", got, want)
+	}
+}
+
 type spyLogger struct {
 	msg string
 }
