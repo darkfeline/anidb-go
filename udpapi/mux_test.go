@@ -21,6 +21,7 @@ import (
 	"crypto/aes"
 	"crypto/rand"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/url"
 	"reflect"
@@ -30,12 +31,13 @@ import (
 	"time"
 )
 
+var nullLogger = slog.New(nullHandler{})
+
 func TestMux(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	m := NewMux(c)
-	m.Logger = testMuxLogger(t)
+	m := NewMux(c, nullLogger)
 	t.Cleanup(m.Close)
 
 	t.Run("first request", func(t *testing.T) {
@@ -101,8 +103,7 @@ func TestMux_close_requests(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	m := NewMux(c)
-	m.Logger = testMuxLogger(t)
+	m := NewMux(c, nullLogger)
 	t.Cleanup(m.Close)
 
 	t.Run("first request", func(t *testing.T) {
@@ -138,8 +139,7 @@ func TestMux_compression(t *testing.T) {
 	t.Parallel()
 	ctx := testContext(t, time.Second)
 	pc, c := newUDPPipe(t, time.Second)
-	m := NewMux(c)
-	m.Logger = testMuxLogger(t)
+	m := NewMux(c, nullLogger)
 	t.Cleanup(m.Close)
 
 	t.Run("request", func(t *testing.T) {
@@ -177,7 +177,7 @@ func TestResponseMap(t *testing.T) {
 	t.Parallel()
 	t.Run("happy path", func(t *testing.T) {
 		t.Parallel()
-		m := responseMap{logger: testLogger{t, "response map: "}}
+		m := responseMap{logger: nullLogger}
 		ctx := testContext(t, time.Second)
 		t.Run("first tag", func(t *testing.T) {
 			c := m.waitFor("shefi")
@@ -210,7 +210,7 @@ func TestResponseMap(t *testing.T) {
 	})
 	t.Run("close", func(t *testing.T) {
 		t.Parallel()
-		m := responseMap{logger: testLogger{t, "response map: "}}
+		m := responseMap{logger: nullLogger}
 		ctx := testContext(t, time.Second)
 		t.Run("first tag", func(t *testing.T) {
 			c := m.waitFor("shefi")
@@ -344,18 +344,4 @@ func testContext(t *testing.T, timeout time.Duration) context.Context {
 	ctx, cf := context.WithTimeout(context.Background(), timeout)
 	t.Cleanup(cf)
 	return ctx
-}
-
-type testLogger struct {
-	t      *testing.T
-	prefix string
-}
-
-func (l testLogger) Printf(format string, v ...interface{}) {
-	l.t.Helper()
-	l.t.Logf(l.prefix+format, v...)
-}
-
-func testMuxLogger(t *testing.T) testLogger {
-	return testLogger{t, "mux: "}
 }

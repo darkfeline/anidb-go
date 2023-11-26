@@ -16,6 +16,7 @@ package udpapi_test
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/url"
 
@@ -27,7 +28,7 @@ func ExampleMux() {
 	if err != nil {
 		panic(err)
 	}
-	m := udpapi.NewMux(c)
+	m := udpapi.NewMux(c, slog.Default())
 	defer m.Close()
 	// Use this to set up encryption.
 	m.SetBlock(nil)

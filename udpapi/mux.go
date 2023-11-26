@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/url"
 	"strconv"
@@ -47,33 +48,29 @@ import (
 //
 // The methods can be called concurrently.
 type Mux struct {
-	// Logger is used for logging.
-	//
-	// A Mux may encounter errors asynchronously; thus it is
-	// recommended to set Logger so errors can be seen.
-	//
-	// [NewMux] initializes this to a no-op value.
-	//
-	// This must be non-nil.
-	Logger Logger
-
 	wg         sync.WaitGroup
-	responses  responseMap
 	tagCounter tagCounter
 	block      syncVar[cipher.Block]
 
 	// Set on init
-	conn net.Conn
+	conn      net.Conn
+	logger    *slog.Logger
+	responses responseMap
 }
 
 // NewMux makes a new Mux.
 // You must call Close after use.
 // The underlying conn will be closed internally and should not
 // be closed directly by the caller.
-func NewMux(conn net.Conn) *Mux {
+//
+// The logger must be non-nil.
+func NewMux(conn net.Conn, l *slog.Logger) *Mux {
 	m := &Mux{
 		conn:   conn,
-		Logger: nullLogger{},
+		logger: l,
+		responses: responseMap{
+			logger: l.WithGroup("responseMap"),
+		},
 	}
 	m.wg.Add(1)
 	go func() {
@@ -158,7 +155,7 @@ func (m *Mux) handleResponses() {
 			if errors.Is(readErr, net.ErrClosed) {
 				return
 			}
-			m.Logger.Printf("Error reading from UDP conn: %s", readErr)
+			m.logger.Error("read from UDP conn", "error", readErr)
 		}
 	}
 }
@@ -170,7 +167,10 @@ func (m *Mux) handleResponseData(data []byte) {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
-			m.Logger.Printf("Error handling response: %s", err)
+			m.logger.Error("handle response data",
+				"error", err,
+				"op", "decrypt",
+				"data", data)
 			return
 		}
 	}
@@ -178,7 +178,10 @@ func (m *Mux) handleResponseData(data []byte) {
 		var err error
 		data, err = decompress(data[2:])
 		if err != nil {
-			m.Logger.Printf("Error handling response: %s", err)
+			m.logger.Error("handle response data",
+				"error", err,
+				"op", "decompress",
+				"data", data)
 			return
 		}
 	}
@@ -190,7 +193,7 @@ func (m *Mux) handleResponseData(data []byte) {
 // This is concurrent safe.
 type responseMap struct {
 	m      sync.Map
-	logger Logger // must be non-nil
+	logger *slog.Logger // Must be non-nil
 }
 
 // waitFor registers a response tag.
@@ -208,7 +211,9 @@ func (m *responseMap) waitFor(t responseTag) <-chan []byte {
 func (m *responseMap) deliver(t responseTag, b []byte) {
 	v, loaded := m.m.LoadAndDelete(t)
 	if !loaded {
-		m.logger.Printf("Unknown tag %q for response", t)
+		m.logger.Warn("deliver",
+			"error", "unknown tag",
+			"tag", t)
 		return
 	}
 	c := v.(chan []byte)

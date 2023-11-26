@@ -14,24 +14,25 @@
 
 package udpapi
 
-// A Logger can be used for logging.
-// A Logger must be safe to use concurrently.
-type Logger interface {
-	Printf(string, ...any)
+import (
+	"context"
+	"log/slog"
+)
+
+type nullHandler struct{}
+
+func (nullHandler) Enabled(context.Context, slog.Level) bool {
+	return false
 }
 
-type nullLogger struct{}
-
-func (nullLogger) Printf(string, ...any) {}
-
-type prefixLogger struct {
-	prefix string
-	logger Logger
+func (nullHandler) Handle(context.Context, slog.Record) error {
+	return nil
 }
 
-func (l prefixLogger) Printf(format string, a ...any) {
-	a2 := make([]any, len(a)+1)
-	a2[0] = l.prefix
-	copy(a2[1:], a)
-	l.logger.Printf("%s"+format, a2...)
+func (h nullHandler) WithAttrs([]slog.Attr) slog.Handler {
+	return h
+}
+
+func (h nullHandler) WithGroup(string) slog.Handler {
+	return h
 }

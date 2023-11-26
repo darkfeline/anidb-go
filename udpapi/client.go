@@ -20,6 +20,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/url"
 	"strconv"
@@ -37,7 +38,7 @@ type Client struct {
 	conn    net.Conn
 	m       *Mux
 	limiter *limiter
-	logger  Logger
+	logger  *slog.Logger
 
 	sessionKey syncVar[string]
 
@@ -49,31 +50,18 @@ type Client struct {
 // The caller should set ClientName and ClientVersion on the returned Client.
 // The caller should call [Client.SetLogger] as the client may produce
 // asynchronous errors.
-func Dial(addr string) (*Client, error) {
+func Dial(addr string, l *slog.Logger) (*Client, error) {
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("udpapi NewClient: %w", err)
 	}
 	c := &Client{
 		conn:    conn,
-		m:       NewMux(conn),
+		m:       NewMux(conn, l.WithGroup("mux")),
 		limiter: newLimiter(),
+		logger:  l,
 	}
-	// Initialize logger, as it must be non-nil.
-	c.SetLogger(nil)
 	return c, nil
-}
-
-// SetLogger sets the logger for the client.
-// If nil, logging is disabled.
-func (c *Client) SetLogger(l Logger) {
-	if l == nil {
-		c.logger = nullLogger{}
-		c.m.Logger = nullLogger{}
-	} else {
-		c.logger = l
-		c.m.Logger = prefixLogger{prefix: "mux: ", logger: l}
-	}
 }
 
 // LocalPort returns the local port for the client connection.
