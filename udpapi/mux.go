@@ -69,7 +69,7 @@ func NewMux(conn net.Conn, l *slog.Logger) *Mux {
 		conn:   conn,
 		logger: l,
 		responses: responseMap{
-			logger: l.WithGroup("responseMap"),
+			logger: l,
 		},
 	}
 	m.wg.Add(1)

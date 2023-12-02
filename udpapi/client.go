@@ -57,7 +57,7 @@ func Dial(addr string, l *slog.Logger) (*Client, error) {
 	}
 	c := &Client{
 		conn:    conn,
-		m:       NewMux(conn, l.WithGroup("mux")),
+		m:       NewMux(conn, l),
 		limiter: newLimiter(),
 		logger:  l,
 	}
