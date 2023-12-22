@@ -69,7 +69,7 @@ func NewMux(conn net.Conn, l *slog.Logger) *Mux {
 		conn:   conn,
 		logger: l,
 		responses: responseMap{
-			logger: l,
+			logger: l.With("package", "go.felesatra.moe/anidb/udpapi", "component", "mux"),
 		},
 	}
 	m.wg.Add(1)

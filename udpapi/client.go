@@ -55,6 +55,7 @@ func Dial(addr string, l *slog.Logger) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("udpapi NewClient: %w", err)
 	}
+	l = l.With("package", "go.felesatra.moe/anidb/udpapi", "component", "client")
 	c := &Client{
 		conn:    conn,
 		m:       NewMux(conn, l),
