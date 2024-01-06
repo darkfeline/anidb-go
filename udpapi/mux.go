@@ -94,8 +94,9 @@ func NewMux(conn net.Conn, l *slog.Logger) *Mux {
 // See the AniDB UDP API documentation for more information.
 //
 // The returned error may be errors.Is with these errors:
-//  context.DeadlineExceeded
-//  net.Error
+//
+//	context.DeadlineExceeded
+//	net.Error
 func (m *Mux) Request(ctx context.Context, cmd string, args url.Values) (Response, error) {
 	ctx, cf := context.WithTimeout(ctx, 5*time.Second)
 	defer cf()
@@ -155,7 +156,7 @@ func (m *Mux) handleResponses() {
 			if errors.Is(readErr, net.ErrClosed) {
 				return
 			}
-			m.logger.Error("read from UDP conn", "error", readErr)
+			m.logger.Error("Error reading from UDP conn", "error", readErr)
 		}
 	}
 }
@@ -167,9 +168,8 @@ func (m *Mux) handleResponseData(data []byte) {
 		var err error
 		data, err = decrypt(b, data)
 		if err != nil {
-			m.logger.Error("handle response data",
+			m.logger.Error("Error decrypting response data",
 				"error", err,
-				"op", "decrypt",
 				"data", data)
 			return
 		}
@@ -178,9 +178,8 @@ func (m *Mux) handleResponseData(data []byte) {
 		var err error
 		data, err = decompress(data[2:])
 		if err != nil {
-			m.logger.Error("handle response data",
+			m.logger.Error("Error decompressing response data",
 				"error", err,
-				"op", "decompress",
 				"data", data)
 			return
 		}
@@ -211,9 +210,9 @@ func (m *responseMap) waitFor(t responseTag) <-chan []byte {
 func (m *responseMap) deliver(t responseTag, b []byte) {
 	v, loaded := m.m.LoadAndDelete(t)
 	if !loaded {
-		m.logger.Warn("deliver",
+		m.logger.Warn("Error delivering data for response tag",
 			"error", "unknown tag",
-			"tag", t)
+			"tag", t, "data", b)
 		return
 	}
 	c := v.(chan []byte)
