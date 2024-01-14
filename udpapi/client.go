@@ -172,6 +172,7 @@ func (c *Client) Logout(ctx context.Context) error {
 }
 
 // FileByHash calls the FILE command by size+ed2k hash.
+// The returned error wraps a [codes.ReturnCode] if applicable.
 func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask FileFmask, amask FileAmask) ([]string, error) {
 	v, err := c.sessionValues()
 	if err != nil {
@@ -186,7 +187,7 @@ func (c *Client) FileByHash(ctx context.Context, size int64, hash string, fmask 
 		return nil, fmt.Errorf("udpapi FileByHash: %s", err)
 	}
 	if resp.Code != 220 {
-		return nil, fmt.Errorf("udpapi FileByHash: got bad return code %s", resp.Code)
+		return nil, fmt.Errorf("udpapi FileByHash: got bad return code %w", resp.Code)
 	}
 	if n := len(resp.Rows); n != 1 {
 		return nil, fmt.Errorf("udpapi FileByHash: got unexpected number of rows %d", n)
