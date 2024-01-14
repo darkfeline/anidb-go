@@ -8,52 +8,304 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[LoginFirst-501]
-	_ = x[AccessDenied-502]
-	_ = x[ClientBanned-504]
-	_ = x[IllegalInput-505]
-	_ = x[InvalidSession-506]
-	_ = x[Banned-555]
-	_ = x[UnknownCmd-598]
-	_ = x[InternalErr-600]
-	_ = x[OutOfService-601]
-	_ = x[ServerBusy-602]
-	_ = x[Timeout-604]
+	_ = x[LOGIN_ACCEPTED-200]
+	_ = x[LOGIN_ACCEPTED_NEW_VERSION-201]
+	_ = x[LOGGED_OUT-203]
+	_ = x[RESOURCE-205]
+	_ = x[STATS-206]
+	_ = x[TOP-207]
+	_ = x[UPTIME-208]
+	_ = x[ENCRYPTION_ENABLED-209]
+	_ = x[MYLIST_ENTRY_ADDED-210]
+	_ = x[MYLIST_ENTRY_DELETED-211]
+	_ = x[ADDED_FILE-214]
+	_ = x[ADDED_STREAM-215]
+	_ = x[EXPORT_QUEUED-217]
+	_ = x[EXPORT_CANCELLED-218]
+	_ = x[ENCODING_CHANGED-219]
+	_ = x[FILE-220]
+	_ = x[MYLIST-221]
+	_ = x[MYLIST_STATS-222]
+	_ = x[WISHLIST-223]
+	_ = x[NOTIFICATION-224]
+	_ = x[GROUP_STATUS-225]
+	_ = x[WISHLIST_ENTRY_ADDED-226]
+	_ = x[WISHLIST_ENTRY_DELETED-227]
+	_ = x[WISHLIST_ENTRY_UPDATED-228]
+	_ = x[MULTIPLE_WISHLIST-229]
+	_ = x[ANIME-230]
+	_ = x[ANIME_BEST_MATCH-231]
+	_ = x[RANDOM_ANIME-232]
+	_ = x[ANIME_DESCRIPTION-233]
+	_ = x[REVIEW-234]
+	_ = x[CHARACTER-235]
+	_ = x[SONG-236]
+	_ = x[ANIMETAG-237]
+	_ = x[CHARACTERTAG-238]
+	_ = x[EPISODE-240]
+	_ = x[UPDATED-243]
+	_ = x[TITLE-244]
+	_ = x[CREATOR-245]
+	_ = x[NOTIFICATION_ENTRY_ADDED-246]
+	_ = x[NOTIFICATION_ENTRY_DELETED-247]
+	_ = x[NOTIFICATION_ENTRY_UPDATE-248]
+	_ = x[MULTIPLE_NOTIFICATION-249]
+	_ = x[GROUP-250]
+	_ = x[CATEGORY-251]
+	_ = x[BUDDY_LIST-253]
+	_ = x[BUDDY_STATE-254]
+	_ = x[BUDDY_ADDED-255]
+	_ = x[BUDDY_DELETED-256]
+	_ = x[BUDDY_ACCEPTED-257]
+	_ = x[BUDDY_DENIED-258]
+	_ = x[VOTED-260]
+	_ = x[VOTE_FOUND-261]
+	_ = x[VOTE_UPDATED-262]
+	_ = x[VOTE_REVOKED-263]
+	_ = x[HOT_ANIME-265]
+	_ = x[RANDOM_RECOMMENDATION-266]
+	_ = x[RANDOM_SIMILAR-267]
+	_ = x[NOTIFICATION_ENABLED-270]
+	_ = x[NOTIFYACK_SUCCESSFUL_MESSAGE-281]
+	_ = x[NOTIFYACK_SUCCESSFUL_NOTIFICATION-282]
+	_ = x[NOTIFICATION_STATE-290]
+	_ = x[NOTIFYLIST-291]
+	_ = x[NOTIFYGET_MESSAGE-292]
+	_ = x[NOTIFYGET_NOTIFY-293]
+	_ = x[SENDMESSAGE_SUCCESSFUL-294]
+	_ = x[USER_ID-295]
+	_ = x[CALENDAR-297]
+	_ = x[PONG-300]
+	_ = x[AUTHPONG-301]
+	_ = x[NO_SUCH_RESOURCE-305]
+	_ = x[API_PASSWORD_NOT_DEFINED-309]
+	_ = x[FILE_ALREADY_IN_MYLIST-310]
+	_ = x[MYLIST_ENTRY_EDITED-311]
+	_ = x[MULTIPLE_MYLIST_ENTRIES-312]
+	_ = x[WATCHED-313]
+	_ = x[SIZE_HASH_EXISTS-314]
+	_ = x[INVALID_DATA-315]
+	_ = x[STREAMNOID_USED-316]
+	_ = x[EXPORT_NO_SUCH_TEMPLATE-317]
+	_ = x[EXPORT_ALREADY_IN_QUEUE-318]
+	_ = x[EXPORT_NO_EXPORT_QUEUED_OR_IS_PROCESSING-319]
+	_ = x[NO_SUCH_FILE-320]
+	_ = x[NO_SUCH_ENTRY-321]
+	_ = x[MULTIPLE_FILES_FOUND-322]
+	_ = x[NO_SUCH_WISHLIST-323]
+	_ = x[NO_SUCH_NOTIFICATION-324]
+	_ = x[NO_GROUPS_FOUND-325]
+	_ = x[NO_SUCH_ANIME-330]
+	_ = x[NO_SUCH_DESCRIPTION-333]
+	_ = x[NO_SUCH_REVIEW-334]
+	_ = x[NO_SUCH_CHARACTER-335]
+	_ = x[NO_SUCH_SONG-336]
+	_ = x[NO_SUCH_ANIMETAG-337]
+	_ = x[NO_SUCH_CHARACTERTAG-338]
+	_ = x[NO_SUCH_EPISODE-340]
+	_ = x[NO_SUCH_UPDATES-343]
+	_ = x[NO_SUCH_TITLES-344]
+	_ = x[NO_SUCH_CREATOR-345]
+	_ = x[NO_SUCH_GROUP-350]
+	_ = x[NO_SUCH_CATEGORY-351]
+	_ = x[BUDDY_ALREADY_ADDED-355]
+	_ = x[NO_SUCH_BUDDY-356]
+	_ = x[BUDDY_ALREADY_ACCEPTED-357]
+	_ = x[BUDDY_ALREADY_DENIED-358]
+	_ = x[NO_SUCH_VOTE-360]
+	_ = x[INVALID_VOTE_TYPE-361]
+	_ = x[INVALID_VOTE_VALUE-362]
+	_ = x[PERMVOTE_NOT_ALLOWED-363]
+	_ = x[ALREADY_PERMVOTED-364]
+	_ = x[HOT_ANIME_EMPTY-365]
+	_ = x[RANDOM_RECOMMENDATION_EMPTY-366]
+	_ = x[RANDOM_SIMILAR_EMPTY-367]
+	_ = x[NOTIFICATION_DISABLED-370]
+	_ = x[NO_SUCH_ENTRY_MESSAGE-381]
+	_ = x[NO_SUCH_ENTRY_NOTIFICATION-382]
+	_ = x[NO_SUCH_MESSAGE-392]
+	_ = x[NO_SUCH_NOTIFY-393]
+	_ = x[NO_SUCH_USER-394]
+	_ = x[CALENDAR_EMPTY-397]
+	_ = x[NO_CHANGES-399]
+	_ = x[NOT_LOGGED_IN-403]
+	_ = x[NO_SUCH_MYLIST_FILE-410]
+	_ = x[NO_SUCH_MYLIST_ENTRY-411]
+	_ = x[MYLIST_UNAVAILABLE-412]
+	_ = x[LOGIN_FAILED-500]
+	_ = x[LOGIN_FIRST-501]
+	_ = x[ACCESS_DENIED-502]
+	_ = x[CLIENT_VERSION_OUTDATED-503]
+	_ = x[CLIENT_BANNED-504]
+	_ = x[ILLEGAL_INPUT_OR_ACCESS_DENIED-505]
+	_ = x[INVALID_SESSION-506]
+	_ = x[NO_SUCH_ENCRYPTION_TYPE-509]
+	_ = x[ENCODING_NOT_SUPPORTED-519]
+	_ = x[BANNED-555]
+	_ = x[UNKNOWN_COMMAND-598]
+	_ = x[INTERNAL_SERVER_ERROR-600]
+	_ = x[ANIDB_OUT_OF_SERVICE-601]
+	_ = x[SERVER_BUSY-602]
+	_ = x[NO_DATA-603]
+	_ = x[TIMEOUT-604]
+	_ = x[API_VIOLATION-666]
+	_ = x[PUSHACK_CONFIRMED-701]
+	_ = x[NO_SUCH_PACKET_PENDING-702]
+	_ = x[VERSION-998]
 }
 
-const (
-	_ReturnCode_name_0 = "501 LOGIN_FIRST502 ACCESS_DENIED"
-	_ReturnCode_name_1 = "504 CLIENT_BANNED505 ILLEGAL_INPUT_OR_ACCESS_DENIED506 INVALID_SESSION"
-	_ReturnCode_name_2 = "555 BANNED"
-	_ReturnCode_name_3 = "598 UNKNOWN_COMMAND"
-	_ReturnCode_name_4 = "600 INTERNAL_SERVER_ERROR601 ANIDB_OUT_OF_SERVICE602 SERVER_BUSY"
-	_ReturnCode_name_5 = "604 TIMEOUT - DELAY AND RESUBMIT"
-)
+const _ReturnCode_name = "LOGIN_ACCEPTEDLOGIN_ACCEPTED_NEW_VERSIONLOGGED_OUTRESOURCESTATSTOPUPTIMEENCRYPTION_ENABLEDMYLIST_ENTRY_ADDEDMYLIST_ENTRY_DELETEDADDED_FILEADDED_STREAMEXPORT_QUEUEDEXPORT_CANCELLEDENCODING_CHANGEDFILEMYLISTMYLIST_STATSWISHLISTNOTIFICATIONGROUP_STATUSWISHLIST_ENTRY_ADDEDWISHLIST_ENTRY_DELETEDWISHLIST_ENTRY_UPDATEDMULTIPLE_WISHLISTANIMEANIME_BEST_MATCHRANDOM_ANIMEANIME_DESCRIPTIONREVIEWCHARACTERSONGANIMETAGCHARACTERTAGEPISODEUPDATEDTITLECREATORNOTIFICATION_ENTRY_ADDEDNOTIFICATION_ENTRY_DELETEDNOTIFICATION_ENTRY_UPDATEMULTIPLE_NOTIFICATIONGROUPCATEGORYBUDDY_LISTBUDDY_STATEBUDDY_ADDEDBUDDY_DELETEDBUDDY_ACCEPTEDBUDDY_DENIEDVOTEDVOTE_FOUNDVOTE_UPDATEDVOTE_REVOKEDHOT_ANIMERANDOM_RECOMMENDATIONRANDOM_SIMILARNOTIFICATION_ENABLEDNOTIFYACK_SUCCESSFUL_MESSAGENOTIFYACK_SUCCESSFUL_NOTIFICATIONNOTIFICATION_STATENOTIFYLISTNOTIFYGET_MESSAGENOTIFYGET_NOTIFYSENDMESSAGE_SUCCESSFULUSER_IDCALENDARPONGAUTHPONGNO_SUCH_RESOURCEAPI_PASSWORD_NOT_DEFINEDFILE_ALREADY_IN_MYLISTMYLIST_ENTRY_EDITEDMULTIPLE_MYLIST_ENTRIESWATCHEDSIZE_HASH_EXISTSINVALID_DATASTREAMNOID_USEDEXPORT_NO_SUCH_TEMPLATEEXPORT_ALREADY_IN_QUEUEEXPORT_NO_EXPORT_QUEUED_OR_IS_PROCESSINGNO_SUCH_FILENO_SUCH_ENTRYMULTIPLE_FILES_FOUNDNO_SUCH_WISHLISTNO_SUCH_NOTIFICATIONNO_GROUPS_FOUNDNO_SUCH_ANIMENO_SUCH_DESCRIPTIONNO_SUCH_REVIEWNO_SUCH_CHARACTERNO_SUCH_SONGNO_SUCH_ANIMETAGNO_SUCH_CHARACTERTAGNO_SUCH_EPISODENO_SUCH_UPDATESNO_SUCH_TITLESNO_SUCH_CREATORNO_SUCH_GROUPNO_SUCH_CATEGORYBUDDY_ALREADY_ADDEDNO_SUCH_BUDDYBUDDY_ALREADY_ACCEPTEDBUDDY_ALREADY_DENIEDNO_SUCH_VOTEINVALID_VOTE_TYPEINVALID_VOTE_VALUEPERMVOTE_NOT_ALLOWEDALREADY_PERMVOTEDHOT_ANIME_EMPTYRANDOM_RECOMMENDATION_EMPTYRANDOM_SIMILAR_EMPTYNOTIFICATION_DISABLEDNO_SUCH_ENTRY_MESSAGENO_SUCH_ENTRY_NOTIFICATIONNO_SUCH_MESSAGENO_SUCH_NOTIFYNO_SUCH_USERCALENDAR_EMPTYNO_CHANGESNOT_LOGGED_INNO_SUCH_MYLIST_FILENO_SUCH_MYLIST_ENTRYMYLIST_UNAVAILABLELOGIN_FAILEDLOGIN_FIRSTACCESS_DENIEDCLIENT_VERSION_OUTDATEDCLIENT_BANNEDILLEGAL_INPUT_OR_ACCESS_DENIEDINVALID_SESSIONNO_SUCH_ENCRYPTION_TYPEENCODING_NOT_SUPPORTEDBANNEDUNKNOWN_COMMANDINTERNAL_SERVER_ERRORANIDB_OUT_OF_SERVICESERVER_BUSYNO_DATATIMEOUTAPI_VIOLATIONPUSHACK_CONFIRMEDNO_SUCH_PACKET_PENDINGVERSION"
 
-var (
-	_ReturnCode_index_0 = [...]uint8{0, 15, 32}
-	_ReturnCode_index_1 = [...]uint8{0, 17, 51, 70}
-	_ReturnCode_index_4 = [...]uint8{0, 25, 49, 64}
-)
+var _ReturnCode_map = map[ReturnCode]string{
+	200: _ReturnCode_name[0:14],
+	201: _ReturnCode_name[14:40],
+	203: _ReturnCode_name[40:50],
+	205: _ReturnCode_name[50:58],
+	206: _ReturnCode_name[58:63],
+	207: _ReturnCode_name[63:66],
+	208: _ReturnCode_name[66:72],
+	209: _ReturnCode_name[72:90],
+	210: _ReturnCode_name[90:108],
+	211: _ReturnCode_name[108:128],
+	214: _ReturnCode_name[128:138],
+	215: _ReturnCode_name[138:150],
+	217: _ReturnCode_name[150:163],
+	218: _ReturnCode_name[163:179],
+	219: _ReturnCode_name[179:195],
+	220: _ReturnCode_name[195:199],
+	221: _ReturnCode_name[199:205],
+	222: _ReturnCode_name[205:217],
+	223: _ReturnCode_name[217:225],
+	224: _ReturnCode_name[225:237],
+	225: _ReturnCode_name[237:249],
+	226: _ReturnCode_name[249:269],
+	227: _ReturnCode_name[269:291],
+	228: _ReturnCode_name[291:313],
+	229: _ReturnCode_name[313:330],
+	230: _ReturnCode_name[330:335],
+	231: _ReturnCode_name[335:351],
+	232: _ReturnCode_name[351:363],
+	233: _ReturnCode_name[363:380],
+	234: _ReturnCode_name[380:386],
+	235: _ReturnCode_name[386:395],
+	236: _ReturnCode_name[395:399],
+	237: _ReturnCode_name[399:407],
+	238: _ReturnCode_name[407:419],
+	240: _ReturnCode_name[419:426],
+	243: _ReturnCode_name[426:433],
+	244: _ReturnCode_name[433:438],
+	245: _ReturnCode_name[438:445],
+	246: _ReturnCode_name[445:469],
+	247: _ReturnCode_name[469:495],
+	248: _ReturnCode_name[495:520],
+	249: _ReturnCode_name[520:541],
+	250: _ReturnCode_name[541:546],
+	251: _ReturnCode_name[546:554],
+	253: _ReturnCode_name[554:564],
+	254: _ReturnCode_name[564:575],
+	255: _ReturnCode_name[575:586],
+	256: _ReturnCode_name[586:599],
+	257: _ReturnCode_name[599:613],
+	258: _ReturnCode_name[613:625],
+	260: _ReturnCode_name[625:630],
+	261: _ReturnCode_name[630:640],
+	262: _ReturnCode_name[640:652],
+	263: _ReturnCode_name[652:664],
+	265: _ReturnCode_name[664:673],
+	266: _ReturnCode_name[673:694],
+	267: _ReturnCode_name[694:708],
+	270: _ReturnCode_name[708:728],
+	281: _ReturnCode_name[728:756],
+	282: _ReturnCode_name[756:789],
+	290: _ReturnCode_name[789:807],
+	291: _ReturnCode_name[807:817],
+	292: _ReturnCode_name[817:834],
+	293: _ReturnCode_name[834:850],
+	294: _ReturnCode_name[850:872],
+	295: _ReturnCode_name[872:879],
+	297: _ReturnCode_name[879:887],
+	300: _ReturnCode_name[887:891],
+	301: _ReturnCode_name[891:899],
+	305: _ReturnCode_name[899:915],
+	309: _ReturnCode_name[915:939],
+	310: _ReturnCode_name[939:961],
+	311: _ReturnCode_name[961:980],
+	312: _ReturnCode_name[980:1003],
+	313: _ReturnCode_name[1003:1010],
+	314: _ReturnCode_name[1010:1026],
+	315: _ReturnCode_name[1026:1038],
+	316: _ReturnCode_name[1038:1053],
+	317: _ReturnCode_name[1053:1076],
+	318: _ReturnCode_name[1076:1099],
+	319: _ReturnCode_name[1099:1139],
+	320: _ReturnCode_name[1139:1151],
+	321: _ReturnCode_name[1151:1164],
+	322: _ReturnCode_name[1164:1184],
+	323: _ReturnCode_name[1184:1200],
+	324: _ReturnCode_name[1200:1220],
+	325: _ReturnCode_name[1220:1235],
+	330: _ReturnCode_name[1235:1248],
+	333: _ReturnCode_name[1248:1267],
+	334: _ReturnCode_name[1267:1281],
+	335: _ReturnCode_name[1281:1298],
+	336: _ReturnCode_name[1298:1310],
+	337: _ReturnCode_name[1310:1326],
+	338: _ReturnCode_name[1326:1346],
+	340: _ReturnCode_name[1346:1361],
+	343: _ReturnCode_name[1361:1376],
+	344: _ReturnCode_name[1376:1390],
+	345: _ReturnCode_name[1390:1405],
+	350: _ReturnCode_name[1405:1418],
+	351: _ReturnCode_name[1418:1434],
+	355: _ReturnCode_name[1434:1453],
+	356: _ReturnCode_name[1453:1466],
+	357: _ReturnCode_name[1466:1488],
+	358: _ReturnCode_name[1488:1508],
+	360: _ReturnCode_name[1508:1520],
+	361: _ReturnCode_name[1520:1537],
+	362: _ReturnCode_name[1537:1555],
+	363: _ReturnCode_name[1555:1575],
+	364: _ReturnCode_name[1575:1592],
+	365: _ReturnCode_name[1592:1607],
+	366: _ReturnCode_name[1607:1634],
+	367: _ReturnCode_name[1634:1654],
+	370: _ReturnCode_name[1654:1675],
+	381: _ReturnCode_name[1675:1696],
+	382: _ReturnCode_name[1696:1722],
+	392: _ReturnCode_name[1722:1737],
+	393: _ReturnCode_name[1737:1751],
+	394: _ReturnCode_name[1751:1763],
+	397: _ReturnCode_name[1763:1777],
+	399: _ReturnCode_name[1777:1787],
+	403: _ReturnCode_name[1787:1800],
+	410: _ReturnCode_name[1800:1819],
+	411: _ReturnCode_name[1819:1839],
+	412: _ReturnCode_name[1839:1857],
+	500: _ReturnCode_name[1857:1869],
+	501: _ReturnCode_name[1869:1880],
+	502: _ReturnCode_name[1880:1893],
+	503: _ReturnCode_name[1893:1916],
+	504: _ReturnCode_name[1916:1929],
+	505: _ReturnCode_name[1929:1959],
+	506: _ReturnCode_name[1959:1974],
+	509: _ReturnCode_name[1974:1997],
+	519: _ReturnCode_name[1997:2019],
+	555: _ReturnCode_name[2019:2025],
+	598: _ReturnCode_name[2025:2040],
+	600: _ReturnCode_name[2040:2061],
+	601: _ReturnCode_name[2061:2081],
+	602: _ReturnCode_name[2081:2092],
+	603: _ReturnCode_name[2092:2099],
+	604: _ReturnCode_name[2099:2106],
+	666: _ReturnCode_name[2106:2119],
+	701: _ReturnCode_name[2119:2136],
+	702: _ReturnCode_name[2136:2158],
+	998: _ReturnCode_name[2158:2165],
+}
 
 func (i ReturnCode) String() string {
-	switch {
-	case 501 <= i && i <= 502:
-		i -= 501
-		return _ReturnCode_name_0[_ReturnCode_index_0[i]:_ReturnCode_index_0[i+1]]
-	case 504 <= i && i <= 506:
-		i -= 504
-		return _ReturnCode_name_1[_ReturnCode_index_1[i]:_ReturnCode_index_1[i+1]]
-	case i == 555:
-		return _ReturnCode_name_2
-	case i == 598:
-		return _ReturnCode_name_3
-	case 600 <= i && i <= 602:
-		i -= 600
-		return _ReturnCode_name_4[_ReturnCode_index_4[i]:_ReturnCode_index_4[i+1]]
-	case i == 604:
-		return _ReturnCode_name_5
-	default:
-		return "ReturnCode(" + strconv.FormatInt(int64(i), 10) + ")"
+	if str, ok := _ReturnCode_map[i]; ok {
+		return str
 	}
+	return "ReturnCode(" + strconv.FormatInt(int64(i), 10) + ")"
 }
