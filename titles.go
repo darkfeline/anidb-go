@@ -40,13 +40,17 @@ func RequestTitles() ([]AnimeT, error) {
 
 const titlesURL = "http://anidb.net/api/anime-titles.xml.gz"
 
-func downloadTitles() ([]byte, error) {
+func httpRequestTitles() (*http.Response, error) {
 	req, err := http.NewRequest("GET", titlesURL, nil)
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Add("User-Agent", userAgent)
-	resp, err := httpClient.Do(req)
+	return httpClient.Do(req)
+}
+
+func downloadTitles() ([]byte, error) {
+	resp, err := httpRequestTitles()
 	if err != nil {
 		return nil, err
 	}
