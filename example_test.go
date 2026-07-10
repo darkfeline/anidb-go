@@ -47,7 +47,7 @@ func ExampleTitlesCache() {
 	for _, anime := range titles {
 		for _, t := range anime.Titles {
 			if strings.Index(t.Name, "bofuri") >= 0 {
-				matched = append(matched)
+				matched = append(matched, anime)
 			}
 		}
 	}
