@@ -15,7 +15,10 @@
 package anidb
 
 import (
+	"bytes"
+	"compress/gzip"
 	"io/ioutil"
+	"net/http"
 	"reflect"
 	"testing"
 )
@@ -44,4 +47,52 @@ func TestDecodeTitles(t *testing.T) {
 	if !reflect.DeepEqual(a, exp) {
 		t.Errorf("DecodeTitles(%#v) = %#v, expected %#v", d, a, exp)
 	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+// fakeTitlesHTTPClient sets up a fake httpClient that serves gzipped AniDB titles data
+// loaded from testdata/titles.xml. It returns the raw gzipped bytes for validation.
+func fakeTitlesHTTPClient(t *testing.T) []byte {
+	// Read original xml data
+	xmlData, err := ioutil.ReadFile("testdata/titles.xml")
+	if err != nil {
+		t.Fatalf("Failed to read testdata/titles.xml: %s", err)
+	}
+
+	// Gzip the xml data
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	if _, err := gw.Write(xmlData); err != nil {
+		t.Fatalf("Failed to gzip XML: %s", err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatalf("Failed to close gzip writer: %s", err)
+	}
+	gzippedBytes := buf.Bytes()
+
+	origClient := httpClient
+	t.Cleanup(func() { httpClient = origClient })
+
+	httpClient = http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.String() != "http://anidb.net/api/anime-titles.xml.gz" {
+				t.Errorf("Unexpected URL: %s", req.URL.String())
+			}
+			if req.Header.Get("User-Agent") == "" {
+				t.Error("Missing User-Agent header")
+			}
+			return &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewReader(gzippedBytes)),
+				Header:     make(http.Header),
+			}, nil
+		}),
+	}
+
+	return gzippedBytes
 }

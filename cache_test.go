@@ -15,19 +15,16 @@
 package anidb
 
 import (
+	"bytes"
 	"io/ioutil"
-	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
 
 func TestTitlesCache(t *testing.T) {
-	f, err := ioutil.TempFile("", "test")
-	if err != nil {
-		t.Fatalf("Error creating temporary dir: %s", err)
-	}
-	t.Cleanup(func() { os.Remove(f.Name()) })
-	f.Close()
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "titles.gob")
 	ts := []AnimeT{{AID: 22, Titles: []Title{
 		{
 			Name: "Neon Genesis Evangelion",
@@ -41,17 +38,60 @@ func TestTitlesCache(t *testing.T) {
 		},
 	}}}
 	c := &TitlesCache{
-		Path:   f.Name(),
+		Path:   cachePath,
 		Titles: ts,
 	}
 	if err := c.Save(); err != nil {
 		t.Fatalf("Error saving: %s", err)
 	}
-	c, err = OpenTitlesCache(f.Name())
+	loadedCache, err := OpenTitlesCache(cachePath)
 	if err != nil {
 		t.Errorf("Error loading: %s", err)
 	}
-	if !reflect.DeepEqual(c.Titles, ts) {
-		t.Errorf("got %#v; want %#v", c.Titles, ts)
+	if !reflect.DeepEqual(loadedCache.Titles, ts) {
+		t.Errorf("got %#v; want %#v", loadedCache.Titles, ts)
+	}
+}
+
+func TestTitlesCache_GetFreshTitles(t *testing.T) {
+	gzippedBytes := fakeTitlesHTTPClient(t)
+
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache", "titles.gob")
+	c := &TitlesCache{
+		Path: cachePath,
+	}
+
+	titles, err := c.GetFreshTitles()
+	if err != nil {
+		t.Fatalf("GetFreshTitles failed: %s", err)
+	}
+
+	// Verify that the cached titles match the expected test data
+	expectedTitles := []AnimeT{{AID: 22, Titles: []Title{
+		{
+			Name: "Neon Genesis Evangelion",
+			Type: "official",
+			Lang: "en",
+		},
+		{
+			Name: "Shinseiki Evangelion",
+			Type: "main",
+			Lang: "x-jat",
+		},
+	}}}
+	if !reflect.DeepEqual(titles, expectedTitles) {
+		t.Errorf("GetFreshTitles returned %#v; want %#v", titles, expectedTitles)
+	}
+
+	// Verify the copy of anime-titles.xml.gz is saved alongside the cache file
+	gzPath := filepath.Join(tempDir, "cache", "anime-titles.xml.gz")
+	savedGz, err := ioutil.ReadFile(gzPath)
+	if err != nil {
+		t.Fatalf("Failed to read saved gz file: %s", err)
+	}
+
+	if !bytes.Equal(savedGz, gzippedBytes) {
+		t.Errorf("Saved gz content does not match original gzipped bytes")
 	}
 }

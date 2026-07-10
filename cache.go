@@ -15,8 +15,11 @@
 package anidb
 
 import (
+	"compress/gzip"
 	"encoding/gob"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -69,10 +72,47 @@ func (c *TitlesCache) GetTitles() ([]AnimeT, error) {
 // GetFreshTitles downloads titles from AniDB and stores it in the cache.
 // See AniDB API documentation about rate limits.
 func (c *TitlesCache) GetFreshTitles() ([]AnimeT, error) {
-	t, err := RequestTitles()
-	if err != nil {
-		return nil, err
+	if err := os.MkdirAll(filepath.Dir(c.Path), 0777); err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
 	}
+
+	resp, err := httpRequestTitles()
+	if err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("get fresh titles: status code %d", resp.StatusCode)
+	}
+
+	gzPath := filepath.Join(filepath.Dir(c.Path), "anime-titles.xml.gz")
+	gzFile, err := os.Create(gzPath)
+	if err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
+	}
+	defer gzFile.Close()
+
+	tr := io.TeeReader(resp.Body, gzFile)
+	r, err := gzip.NewReader(tr)
+	if err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
+	}
+	defer r.Close()
+
+	d, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
+	}
+
+	if err := gzFile.Close(); err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
+	}
+
+	t, err := DecodeTitles(d)
+	if err != nil {
+		return nil, fmt.Errorf("get fresh titles: %s", err)
+	}
+
 	c.Titles = t
 	c.Updated = true
 	return t, nil
